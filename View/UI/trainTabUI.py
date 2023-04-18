@@ -1,5 +1,8 @@
+from pathlib import WindowsPath
+import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
+from numpy import append
 
 class TrainTab(QWidget):
     def __init__(self):
@@ -124,9 +127,9 @@ class TrainTab(QWidget):
         self.setLayout(vbox)
 
     def show_dialog(self):
-        dialog = QDialog(self)   
-        dialog.setWindowTitle('\"Database Name\" [\"Num images\"]')
-        dialog.resize(400, 300)   
+        self.dialog = QDialog(self)   
+        self.dialog.setWindowTitle('\"Database Name\" [\"Num images\"]')
+        self.dialog.resize(400, 300)   
 
         # Model dropdown
         hboxModel = QHBoxLayout()
@@ -185,6 +188,7 @@ class TrainTab(QWidget):
         trainModelButton = QPushButton("Train model")
         trainModelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         trainModelButton.clicked.connect(self.train_model)
+        trainModelButton.clicked.connect(self.dialog.reject)
         
         vbox = QVBoxLayout()
         vbox.addLayout(hboxModel)
@@ -200,10 +204,88 @@ class TrainTab(QWidget):
         vboxAll.addLayout(vbox)
         vboxAll.addLayout(vboxButton)
 
-        dialog.setLayout(vboxAll)
-
-        dialog.show()
+        self.dialog.setLayout(vboxAll)
+        self.dialog.show()
         
     def train_model(self):
         print("train model")
+        
+        self.show_train_dialog()
+
+    def show_train_dialog(self):
+        print("training model...")
+        self.trainDialog = QDialog(self)
+        self.trainDialog.setWindowTitle('\"Database Name\" [\"Num images\"]')
+        self.trainDialog.resize(400, 300)
+        
+        vbox = QVBoxLayout()
+        hboxInfo = QHBoxLayout()
+        vboxHyperparameters = QVBoxLayout()
+        vboxHyperparameters.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+
+        cnnLabel = QLabel("CNN Name: ")
+        batchsizeLabel = QLabel("Batch Size: ")
+        epochNumLabel = QLabel("Epoch Number: ")
+        trainLabel = QLabel("Train Set Size: ")
+        validationLabel = QLabel("Validation Set Size: ")
+        testLabel = QLabel("Test Set Size: ")
+        vboxHyperparameters.addWidget(cnnLabel)
+        vboxHyperparameters.addWidget(batchsizeLabel)
+        vboxHyperparameters.addWidget(epochNumLabel)
+        vboxHyperparameters.addWidget(trainLabel)
+        vboxHyperparameters.addWidget(validationLabel)
+        vboxHyperparameters.addWidget(testLabel)
+
+        # Training progress data
+        trainingData = QTextEdit()
+        trainingData.setReadOnly(True)
+        trainingData.setText("Training progress data goes here")
+
+        hboxInfo.addLayout(vboxHyperparameters)
+        hboxInfo.addWidget(trainingData)
+
+        # Progress bar
+        progressBar = QProgressBar(self)
+        progressBar.setRange(0, 100)
+        progressBar.setValue(0)
+
+        # Cancel Button
+        hboxButtons = QHBoxLayout()
+        self.cancelButton = QPushButton("Cancel")
+        self.cancelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        hboxButtons.addWidget(self.cancelButton)
+        self.cancelButton.clicked.connect(self.trainDialog.reject)
+
+        # 3 different buttons after training finishes - train new model, save as, test model
+        self.trainNewModelButton = QPushButton("Train new model")
+        self.trainNewModelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.saveAsButton = QPushButton("Save as")
+        self.saveAsButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.testModelButton = QPushButton("Test model")
+        self.testModelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        hboxButtons.addWidget(self.trainNewModelButton)
+        hboxButtons.addWidget(self.saveAsButton)
+        hboxButtons.addWidget(self.testModelButton)
+        self.trainNewModelButton.setVisible(False)
+        self.saveAsButton.setVisible(False)
+        self.testModelButton.setVisible(False)
+        
+        vbox.addLayout(hboxInfo)
+        vbox.addWidget(progressBar)
+        vbox.addLayout(hboxButtons)
+
+
+        self.trainDialog.setLayout(vbox)
+        self.trainDialog.show()
+
+    # Call after training finished
+    def showFinishedButtons(self):
+        print("finished training")
+        self.cancelButton.setVisible(False)
+        self.trainNewModelButton.setVisible(True)
+        self.saveAsButton.setVisible(True)
+        self.testModelButton.setVisible(True)
+    
+
+
 
