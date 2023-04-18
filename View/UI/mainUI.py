@@ -12,18 +12,18 @@ class MyApp(QWidget):
 
     def initUI(self):
 
-        tabWidget = QTabWidget()
+        self.tabWidget = QTabWidget()
         
         datasetTab = DatasetTab()
         trainTab = TrainTab()
         testTab = TestTab()
         
-        tabWidget.addTab(datasetTab, 'Dataset')
-        tabWidget.addTab(trainTab, 'Train')
-        tabWidget.addTab(testTab, 'Test')
+        self.tabWidget.addTab(datasetTab, 'Dataset')
+        self.tabWidget.addTab(trainTab, 'Train')
+        self.tabWidget.addTab(testTab, 'Test')
 
         vbox = QVBoxLayout()
-        vbox.addWidget(tabWidget)
+        vbox.addWidget(self.tabWidget)
         vbox.setContentsMargins(0, 0, 0, 0)
         self.setLayout(vbox)
 
@@ -31,12 +31,6 @@ class MyApp(QWidget):
         self.move(900, -800)
         self.resize(800, 600)        
         self.show()
-
-
-
-
-
-
 
 
 
