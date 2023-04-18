@@ -1,9 +1,5 @@
-from pathlib import Path
 import sys
-import cv2
-from PyQt5 import QtGui
-from PyQt5.QtWidgets import QApplication, QWidget, QTabWidget, QVBoxLayout, QLabel, QComboBox, QPushButton, QInputDialog
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import *
 from datasetTabUI import DatasetTab
 from trainTabUI import TrainTab
 from testTabUI import TestTab
@@ -19,7 +15,6 @@ class MyApp(QWidget):
         tabWidget = QTabWidget()
         
         datasetTab = DatasetTab()
-        
         trainTab = TrainTab()
         testTab = TestTab()
         

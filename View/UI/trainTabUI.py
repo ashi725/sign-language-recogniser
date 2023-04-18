@@ -56,10 +56,7 @@ class TrainTab(QWidget):
 
         letterCol1CheckBoxes = [cbA, cbB, cbC, cbD, cbE, cbF, cbG, cbH, cbI, cbK, cbL, cbM]
         letterCol2CheckBoxes = [cbN, cbO, cbP, cbQ, cbR, cbS, cbT, cbU, cbV, cbW, cbX, cbY]
-
         
-        
-
         # A-M and select all button
         vboxLetters1 = QVBoxLayout()
         for letterCheckBox in letterCol1CheckBoxes:
@@ -106,6 +103,7 @@ class TrainTab(QWidget):
         continueButton = QPushButton("Continue")
         continueButton.setStyleSheet("font-size: 16px")
         continueButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        continueButton.clicked.connect(self.show_dialog)
         hboxContinueButton.addWidget(continueButton)
 
         # Right side of main layout - train, test, view, images, and continue button
@@ -114,10 +112,8 @@ class TrainTab(QWidget):
         vboxRight.addLayout(hboxFilters)
         spacer = QLabel("images go here")
         spacer.setStyleSheet("font-size: 30px; padding: 200px 100px 200px 100px")
-
         vboxRight.addWidget(spacer)
         vboxRight.addLayout(hboxContinueButton)
-
 
         # Main layout with letters and images
         hboxMain = QHBoxLayout()
@@ -125,8 +121,89 @@ class TrainTab(QWidget):
         hboxMain.addLayout(vboxRight)
         vbox.addLayout(hboxMain)
 
-        
-        
-
         self.setLayout(vbox)
+
+    def show_dialog(self):
+        dialog = QDialog(self)   
+        dialog.setWindowTitle('\"Database Name\" [\"Num images\"]')
+        dialog.resize(400, 300)   
+
+        # Model dropdown
+        hboxModel = QHBoxLayout()
+        modelLabel = QLabel("Model: ")
+        self.modelDropdown = QComboBox()
+        self.modelDropdown.addItems(["Not selected","LeNet-5", "ResNet", "xxxx"])
+        hboxModel.addWidget(modelLabel)
+        hboxModel.addWidget(self.modelDropdown)
+
+        # Batchsize dropdown
+        hboxBatchsize = QHBoxLayout()
+        batchsizeLabel = QLabel("Batchsize: ")
+        self.spinboxBatchsize = QSpinBox()
+        self.spinboxBatchsize.setRange(0, 500)
+        hboxBatchsize.addWidget(batchsizeLabel)
+        hboxBatchsize.addWidget(self.spinboxBatchsize)
+
+        # Epoch number dropdown
+        hboxEpochNum = QHBoxLayout()
+        epochNumLabel = QLabel("Epoch Number: ")
+        self.spinboxEpochNum = QSpinBox()
+        self.spinboxEpochNum.setRange(0, 10)
+        hboxEpochNum.addWidget(epochNumLabel)
+        hboxEpochNum.addWidget(self.spinboxEpochNum)
+
+        # Test and validation splitter
+        hboxSplitter = QHBoxLayout()
+        vboxTrain = QVBoxLayout()
+        trainLabel = QLabel("Train")
+        vboxTrain.addWidget(trainLabel)
+        self.spinboxTrain = QSpinBox()
+        self.spinboxTrain.setRange(0, 100)
+        vboxTrain.addWidget(self.spinboxTrain)
+        hboxSplitter.addLayout(vboxTrain)
+        vboxSlider = QVBoxLayout()
+        sliderInfoLabel = QLabel("Both must be at least 10%")
+        sliderInfoLabel.setAlignment(Qt.AlignCenter)
+        sliderInfoLabel.setStyleSheet("font-size: 10px;")
+        vboxSlider.addWidget(sliderInfoLabel)
+        self.slider = QSlider(Qt.Horizontal, self)
+        self.slider.setRange(0, 100)
+        self.slider.setSingleStep(1)
+        self.slider.setTickInterval(10)
+        self.slider.setTickPosition(50)
+        vboxSlider.addWidget(self.slider)
+        hboxSplitter.addLayout(vboxSlider)
+        vboxValidate = QVBoxLayout()
+        validateLabel = QLabel("Validate")
+        vboxValidate.addWidget(validateLabel)
+        self.spinboxValidate = QSpinBox()
+        self.spinboxValidate.setRange(0, 100)
+        vboxValidate.addWidget(self.spinboxValidate)
+        hboxSplitter.addLayout(vboxValidate)
+
+        # Train model button
+        trainModelButton = QPushButton("Train model")
+        trainModelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        trainModelButton.clicked.connect(self.train_model)
+        
+        vbox = QVBoxLayout()
+        vbox.addLayout(hboxModel)
+        vbox.addLayout(hboxBatchsize)
+        vbox.addLayout(hboxEpochNum)
+        vbox.addLayout(hboxSplitter)
+
+        vboxButton = QVBoxLayout()
+        vboxButton.setAlignment(Qt.AlignCenter)
+        vboxButton.addWidget(trainModelButton)
+
+        vboxAll = QVBoxLayout()
+        vboxAll.addLayout(vbox)
+        vboxAll.addLayout(vboxButton)
+
+        dialog.setLayout(vboxAll)
+
+        dialog.show()
+        
+    def train_model(self):
+        print("train model")
 
