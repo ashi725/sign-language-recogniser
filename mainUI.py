@@ -1,8 +1,8 @@
 import sys
 from PyQt5.QtWidgets import *
-from datasetTabUI import DatasetTab
-from trainTabUI import TrainTab
-from testTabUI import TestTab
+from tabUI.datasetTabUI import DatasetTab
+from tabUI.trainTabUI import TrainTab
+from tabUI.testTabUI import TestTab
 
 class MyApp(QWidget):
 
