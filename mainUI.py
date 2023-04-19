@@ -3,12 +3,16 @@ from PyQt5.QtWidgets import *
 from tabUI.datasetTabUI import DatasetTab
 from tabUI.trainTabUI import TrainTab
 from tabUI.testTabUI import TestTab
+from models.DataModelSingleton import DataModelSingleton
+
 
 class MyApp(QWidget):
 
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.dataModel = DataModelSingleton()
+
 
     def initUI(self):
 
