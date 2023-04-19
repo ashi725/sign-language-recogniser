@@ -141,7 +141,7 @@ class TrainTab(QWidget):
         vbox.addLayout(hboxMain)
 
         self.setLayout(vbox)
-
+    
     def renderImages(self, datasetName, labelNumbersList):
         MAX_COLUMNS = 10
         rowIndex = 0
@@ -224,29 +224,39 @@ class TrainTab(QWidget):
         # Test and validation splitter
         hboxSplitter = QHBoxLayout()
         vboxTrain = QVBoxLayout()
+        vboxSlider = QVBoxLayout()
+        vboxValidate = QVBoxLayout()
+
         trainLabel = QLabel("Train")
-        vboxTrain.addWidget(trainLabel)
         self.spinboxTrain = QSpinBox()
         self.spinboxTrain.setRange(0, 100)
-        vboxTrain.addWidget(self.spinboxTrain)
-        hboxSplitter.addLayout(vboxTrain)
-        vboxSlider = QVBoxLayout()
+        
         sliderInfoLabel = QLabel("Both must be at least 10%")
         sliderInfoLabel.setAlignment(Qt.AlignCenter)
         sliderInfoLabel.setStyleSheet("font-size: 10px;")
-        vboxSlider.addWidget(sliderInfoLabel)
         self.slider = QSlider(Qt.Horizontal, self)
         self.slider.setRange(0, 100)
         self.slider.setSingleStep(1)
         self.slider.setTickInterval(10)
         self.slider.setTickPosition(50)
-        vboxSlider.addWidget(self.slider)
-        hboxSplitter.addLayout(vboxSlider)
-        vboxValidate = QVBoxLayout()
+        
         validateLabel = QLabel("Validate")
-        vboxValidate.addWidget(validateLabel)
         self.spinboxValidate = QSpinBox()
         self.spinboxValidate.setRange(0, 100)
+        
+        # Link values to each other
+        self.slider.valueChanged.connect(lambda value: self.spinboxTrain.setValue(value))
+        self.slider.valueChanged.connect(lambda value: self.spinboxValidate.setValue(100-value))
+        self.spinboxTrain.valueChanged.connect(lambda value: self.slider.setValue(value))
+        self.spinboxValidate.valueChanged.connect(lambda value: self.slider.setValue(100-value))
+
+        vboxTrain.addWidget(trainLabel)
+        vboxTrain.addWidget(self.spinboxTrain)
+        hboxSplitter.addLayout(vboxTrain)
+        vboxSlider.addWidget(sliderInfoLabel)
+        vboxSlider.addWidget(self.slider)
+        hboxSplitter.addLayout(vboxSlider)
+        vboxValidate.addWidget(validateLabel)
         vboxValidate.addWidget(self.spinboxValidate)
         hboxSplitter.addLayout(vboxValidate)
 
