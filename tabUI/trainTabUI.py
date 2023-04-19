@@ -1,35 +1,41 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
+from models.DataModelSingleton import DataModelSingleton
 
 class TrainTab(QWidget):
+
     def __init__(self):
         super().__init__()
+        self.dataModel = DataModelSingleton()
 
         vbox = QVBoxLayout()
         vbox.setAlignment(Qt.AlignTop)
 
+        # Database name and number of images
         vboxDetails1 = QVBoxLayout()
         self.databaseNameLabel = QLabel("Database Name: ")
         self.databaseNameLabel.setStyleSheet("font-size: 16px")
-        self.numImagesLabel = QLabel("Number of images: ")
-        self.numImagesLabel.setStyleSheet("font-size: 16px")
+        self.numTotalImagesLabel = QLabel("Total # of images: ")
+        self.numTotalImagesLabel.setStyleSheet("font-size: 16px")
         vboxDetails1.addWidget(self.databaseNameLabel)
-        vboxDetails1.addWidget(self.numImagesLabel)
+        vboxDetails1.addWidget(self.numTotalImagesLabel)
 
+        # Letters selected and number of images selected
         vboxDetails2 = QVBoxLayout()
-        self.numLettersLabel = QLabel("Letters selected: ")
+        self.numLettersLabel = QLabel("# Letters selected: ")
         self.numLettersLabel.setStyleSheet("font-size: 16px")
-        self.numImagesLabel = QLabel("Total images: ")
-        self.numImagesLabel.setStyleSheet("font-size: 16px")
+        self.numSelectedImagesLabel = QLabel("Selected # of images: ")
+        self.numSelectedImagesLabel.setStyleSheet("font-size: 16px")
         vboxDetails2.addWidget(self.numLettersLabel)
-        vboxDetails2.addWidget(self.numImagesLabel)
+        vboxDetails2.addWidget(self.numSelectedImagesLabel)
 
         hboxDetails = QHBoxLayout()
         hboxDetails.addLayout(vboxDetails1)
         hboxDetails.addLayout(vboxDetails2)
         vbox.addLayout(hboxDetails)
         
+        # Checkboxes for letters
         cbA = QCheckBox('A: ', self)
         cbB = QCheckBox('B: ', self)
         cbC = QCheckBox('C: ', self)
@@ -55,27 +61,30 @@ class TrainTab(QWidget):
         cbX = QCheckBox('X: ', self)
         cbY = QCheckBox('Y: ', self)
 
-        letterCol1CheckBoxes = [cbA, cbB, cbC, cbD, cbE, cbF, cbG, cbH, cbI, cbK, cbL, cbM]
-        letterCol2CheckBoxes = [cbN, cbO, cbP, cbQ, cbR, cbS, cbT, cbU, cbV, cbW, cbX, cbY]
+        self.letterCol1CheckBoxes = [cbA, cbB, cbC, cbD, cbE, cbF, cbG, cbH, cbI, cbK, cbL, cbM]
+        self.letterCol2CheckBoxes = [cbN, cbO, cbP, cbQ, cbR, cbS, cbT, cbU, cbV, cbW, cbX, cbY]
         
         # A-M and select all button
         vboxLetters1 = QVBoxLayout()
-        for letterCheckBox in letterCol1CheckBoxes:
+        for letterCheckBox in self.letterCol1CheckBoxes:
             letterCheckBox.setStyleSheet("font-size: 16px")
             vboxLetters1.addWidget(letterCheckBox)
         
         selectAllButton = QPushButton("Select all")
         selectAllButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        selectAllButton.clicked.connect(self.onSelectAllCheckboxes)
+        
         vboxLetters1.addWidget(selectAllButton)
 
         # N-Y and clear button
         vboxLetters2 = QVBoxLayout()
-        for letterCheckBox in letterCol2CheckBoxes:
+        for letterCheckBox in self.letterCol2CheckBoxes:
             letterCheckBox.setStyleSheet("font-size: 16px")
             vboxLetters2.addWidget(letterCheckBox)
         
         selectNoneButton = QPushButton("Clear")
         selectNoneButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        selectNoneButton.clicked.connect(self.onClearButtonCheckboxes)
         vboxLetters2.addWidget(selectNoneButton)
 
         # Left side of main layout - letters and select/clear buttons
@@ -85,17 +94,18 @@ class TrainTab(QWidget):
 
 
         # Train, test and view 
-        trainButton = QRadioButton("Train")
-        trainButton.setStyleSheet("font-size: 16px")
-        testButton = QRadioButton("Test")
-        testButton.setStyleSheet("font-size: 16px")
+        self.trainButton = QRadioButton("Train")
+        self.trainButton.setStyleSheet("font-size: 16px")
+        self.testButton = QRadioButton("Test")
+        self.testButton.setStyleSheet("font-size: 16px")
         viewButton = QPushButton("View")
         viewButton.setStyleSheet("font-size: 16px")
         viewButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        viewButton.clicked.connect(self.onViewImagesButton)
         hboxFilters = QHBoxLayout()
         hboxFilters.setAlignment(Qt.AlignCenter)
-        hboxFilters.addWidget(trainButton)
-        hboxFilters.addWidget(testButton)
+        hboxFilters.addWidget(self.trainButton)
+        hboxFilters.addWidget(self.testButton)
         hboxFilters.addWidget(viewButton)
 
         # Continue button
@@ -111,9 +121,17 @@ class TrainTab(QWidget):
         vboxRight = QVBoxLayout()
         vboxRight.setAlignment(Qt.AlignCenter)
         vboxRight.addLayout(hboxFilters)
-        spacer = QLabel("images go here")
-        spacer.setStyleSheet("font-size: 30px; padding: 200px 100px 200px 100px")
-        vboxRight.addWidget(spacer)
+
+        # Images
+        imageScrollArea = QScrollArea()
+        imageWidget = QWidget()
+        self.imageGridLayout = QGridLayout(imageWidget)
+        imageScrollArea.setWidgetResizable(True)
+        imageScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        imageScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        imageScrollArea.setWidget(imageWidget)
+        vboxRight.addWidget(imageScrollArea)
+
         vboxRight.addLayout(hboxContinueButton)
 
         # Main layout with letters and images
@@ -123,6 +141,56 @@ class TrainTab(QWidget):
         vbox.addLayout(hboxMain)
 
         self.setLayout(vbox)
+
+    def renderImages(self, datasetName, labelNumbersList):
+        MAX_COLUMNS = 10
+        rowIndex = 0
+        columnIndex = 0
+
+        dataset = None
+        # Get correct dataset
+        if (datasetName == 'train'):
+            dataset = self.dataModel.trainDataset
+        else:
+            dataset = self.dataModel.testDataSet
+
+        for labelNumber in labelNumbersList:
+            # Check if label exist in dataset. If false skip
+            if str(labelNumber) not in dataset.labeledSet:
+                continue
+
+            fingerImageList = dataset.labeledSet[str(labelNumber)]
+            for fingerImage in fingerImageList:
+                imageLabel = QLabel()
+                imageLabel.setPixmap(fingerImage.pixMap)
+
+                self.imageGridLayout.addWidget(imageLabel, rowIndex, columnIndex)
+
+                # Grid pos algorithm
+                columnIndex += 1
+                if (columnIndex > MAX_COLUMNS):
+                    columnIndex = 0
+                    rowIndex += 1
+
+    def clearImages(self):
+        while self.imageGridLayout.count():
+            child = self.imageGridLayout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+    # This method generates a list of numbers according to labels of the checkbox
+    def generateLabelNumberList(self):
+        labelsToDisplay = []
+        counter= 1
+        for chkBox in self.letterCol1CheckBoxes:
+            if chkBox.isChecked():
+                labelsToDisplay.append(counter)
+            counter+=1
+        for chkBox in self.letterCol2CheckBoxes:
+            if chkBox.isChecked():
+                labelsToDisplay.append(counter)
+            counter += 1
+        return labelsToDisplay
 
     def show_dialog(self):
         self.dialog = QDialog(self)   
@@ -323,6 +391,36 @@ class TrainTab(QWidget):
     def save(self):
         print("saved")
         # code to save model somewhere?
+
+    def onSelectAllCheckboxes(self):
+        for chkBox in self.letterCol1CheckBoxes:
+            chkBox.setChecked(True)
+        for chkBox in self.letterCol2CheckBoxes:
+            chkBox.setChecked(True)
+
+    def onClearButtonCheckboxes(self):
+        for chkBox in self.letterCol1CheckBoxes:
+            chkBox.setChecked(False)
+        for chkBox in self.letterCol2CheckBoxes:
+            chkBox.setChecked(False)
+
+    def onViewImagesButton(self):
+        self.clearImages()
+        datasetName = None
+        if self.trainButton.isChecked() and not self.testButton.isChecked():
+            datasetName = "train"
+        elif not self.trainButton.isChecked() and self.testButton.isChecked():
+            datasetName = "test"
+        else:
+            print("ERROR TRAIN/TEST RADIO NOT SELECTED")
+            return
+        self.renderImages(datasetName, self.generateLabelNumberList())
+
+    def onContinueButton(self):
+        pass
+
+
+
 
 
 
