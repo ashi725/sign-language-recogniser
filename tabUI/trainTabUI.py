@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import *
 
 from models.DataModelSingleton import DataModelSingleton
 from models.HyperParametersSingleton import HyperParametersSingleton
+from models.ModelRunnerThread import ModelTrainerThread
 from tabUI.ImageViewer import ImageViewer
 from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
 
@@ -21,6 +22,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         super().__init__()
         self.dataModel = DataModelSingleton()
         self.hyperParameters = HyperParametersSingleton()
+        self.modelTrainerRunner = None
 
         gridLayout = QGridLayout()
         self.setLayout(gridLayout)
@@ -112,7 +114,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         # Train model button
         trainModelButton = QPushButton("Train model")
         trainModelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        trainModelButton.clicked.connect(self.train_model)
+        trainModelButton.clicked.connect(self.on_train_model_button)
         trainModelButton.clicked.connect(self.dialog.reject)
         
         vbox = QVBoxLayout()
@@ -132,18 +134,19 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.dialog.setLayout(vboxAll)
         self.dialog.show()
         
-    def train_model(self):
-        print("train model")
-        fileDir = os.getcwd() + r'\models'
-        os.chdir(fileDir) 
-        subprocess.Popen("python " + self.hyperParameters.modelName + ".py")
-        self.show_train_dialog()
+
 
     def show_train_dialog(self):
+
         print("training model...")
+        self.modelTrainerRunner = ModelTrainerThread(self.hyperParameters)
+        self.modelTrainerRunner.start()
+        self.modelTrainerRunner.statusUpdate.connect(self.updateTrainingDataText)
+
         self.trainDialog = QDialog(self)
         self.trainDialog.setWindowTitle(self.hyperParameters.dataset + "[numimages" + "1" +"]")
         self.trainDialog.resize(400, 300)
+        self.trainDialog.setModal(True)
         
         vbox = QVBoxLayout()
         hboxInfo = QHBoxLayout()
@@ -164,12 +167,12 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         vboxHyperparameters.addWidget(testLabel)
 
         # Training progress data
-        trainingData = QTextEdit()
-        trainingData.setReadOnly(True)
-        trainingData.setText("Training progress data goes here")
+        self.trainingData = QTextEdit()
+        self.trainingData.setReadOnly(True)
+        self.trainingData.setText("Training progress data goes here")
 
         hboxInfo.addLayout(vboxHyperparameters)
-        hboxInfo.addWidget(trainingData)
+        hboxInfo.addWidget(self.trainingData)
 
         # Progress bar
         progressBar = QProgressBar(self)
@@ -234,7 +237,9 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.trainNewModelButton.setVisible(True)
         self.saveAsButton.setVisible(True)
         self.testModelButton.setVisible(True)
-    
+
+        self.modelTrainerRunner.stop()
+
     # Dialog to save model
     def showSaveAs(self):
         print("save as")
@@ -266,14 +271,14 @@ class TrainTab(QWidget, TabBaseAbstractClass):
 
     # save the model
     def save(self):
-        print("saved")
+        print("save")
         # code to save model somewhere?
 
     def onContinueButton(self):
         pass
 
+    def on_train_model_button(self):
+        self.show_train_dialog()
 
-
-
-
-
+    def updateTrainingDataText(self, text):
+        self.trainingData.setText(text)
