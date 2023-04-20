@@ -1,3 +1,6 @@
+import os
+from subprocess import Popen
+import subprocess
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
@@ -41,7 +44,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         hboxModel = QHBoxLayout()
         modelLabel = QLabel("Model: ")
         self.modelDropdown = QComboBox()
-        self.modelDropdown.addItems(["Not selected","LeNet-5", "ResNet", "xxxx"])
+        self.modelDropdown.addItems(["Not selected","lenet5", "resnet", "xxxx"])
         self.modelDropdown.currentTextChanged.connect(self.change_modelDropdown)
         hboxModel.addWidget(modelLabel)
         hboxModel.addWidget(self.modelDropdown)
@@ -131,7 +134,9 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         
     def train_model(self):
         print("train model")
-        
+        fileDir = os.getcwd() + r'\models'
+        os.chdir(fileDir) 
+        subprocess.Popen("python " + self.hyperParameters.modelName + ".py")
         self.show_train_dialog()
 
     def show_train_dialog(self):

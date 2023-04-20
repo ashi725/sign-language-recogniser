@@ -12,23 +12,28 @@ import torch.nn as nn
 import torch.optim as optim
 
 from HyperParametersSingleton import HyperParametersSingleton
+from DataModelSingleton import DataModelSingleton, FingerDataset, FingerImage
+
 
 hyperParameters = HyperParametersSingleton()
+dataModel = DataModelSingleton()
 
 # Training settings
 batch_size = hyperParameters.batchsize
 epochs = hyperParameters.epochs
 
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f'Training MNIST Model on {device}\n{"=" * 44}')
 
-# MNIST Dataset
-train_dataset = datasets.MNIST(root='mnist_data/',
-                               train=True,
-                               transform=transforms.ToTensor(),
+
+# Load Kaggle MNIST dataset
+train_dataset = datasets.MNIST(root='./data', 
+                               train=True, 
+                               transform=transforms.ToTensor(), 
                                download=True)
 
-test_dataset = datasets.MNIST(root='mnist_data/',
+test_dataset = datasets.MNIST(root='./data',
                               train=False,
                               transform=transforms.ToTensor())
 
