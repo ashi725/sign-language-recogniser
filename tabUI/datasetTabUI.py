@@ -13,9 +13,11 @@ from models.DataModelSingleton import DataModelSingleton, FingerDataset, FingerI
 from models.HyperParametersSingleton import HyperParametersSingleton
 from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
 
+
 class DatasetTab(QWidget,TabBaseAbstractClass):
     def refreshWindowOnLoad(self):
         pass
+
     def __init__(self):
 
         # Init variables
@@ -34,16 +36,15 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
         vbox.addWidget(importDatasetButton)
         vbox.addStretch()
         self.setLayout(vbox)
-
     
-
     def show_dialog(self):
         dialog = QDialog(self)   
+        dialog.setModal(True)
         dialog.setWindowTitle('Import dataset')
         dialog.setWindowFlags(dialog.windowFlags() & ~Qt.WindowCloseButtonHint)
         dialog.setFixedWidth(400)
         self.dropdown = QComboBox(dialog)
-        self.dropdown.addItems(['Not selected', 'MNIST', 'xxxx'])
+        self.dropdown.addItems(['Not selected', 'MNIST', 'Custom'])
         self.dropdown.currentIndexChanged.connect(self.dropdown_changed)
 
         # Error Label
@@ -167,11 +168,17 @@ class DownloadThread(QThread):
         self.selectedDatabase = selectedDatabase
         self.dataModelReference = dataModelReference
         self.stopFlag = threading.Event()
+        self.noDatabaseSelectedEdgeCase = False
 
     def run(self):
         while not self.stopFlag.is_set():
             self.downloadDatabase()
             break
+
+        # If no DB selected. Just return.
+        if self.noDatabaseSelectedEdgeCase:
+            self.finishDownloadingFlag.emit(2)
+            return
 
         # Cleanup if stopped
         if self.stopFlag.is_set():
@@ -197,21 +204,41 @@ class DownloadThread(QThread):
 
             self.downloadStatusLabelChanged.emit("Downloading Test Set (1/2)")
             mnistTest = self.loadCsv(r'resources\sign_mnist_test.csv')
-
+            mnistTest.databaseName = "Test_MNIST"
             self.downloadStatusLabelChanged.emit("Downloading Train Set (2/2)")
             mnistTrain = self.loadCsv(r'resources\sign_mnist_train.csv')
-
+            mnistTrain.databaseName = "Train_MNIST"
             self.downloadStatusLabelChanged.emit("Finished Downloading")
 
             # Store downloaded data into sharedData
             self.dataModelReference.testDataSet = mnistTest
             self.dataModelReference.trainDataset = mnistTrain
 
-        elif self.selectedDatabase == "xxxx":
-            self.errorLabelChanged.emit("ugh")
+        elif self.selectedDatabase == "Custom":
+            testFilePath, tempVar = QFileDialog.getOpenFileName(None, "Select Test CSV file", "", "CSV (*.csv)")
+            trainFilePath, tempVar = QFileDialog.getOpenFileName(None, "Select Train CSV file", "", "CSV (*.csv)")
+
+            # Check invalid file paths
+            if testFilePath == "" or trainFilePath=="":
+                self.errorLabelChanged.emit("Please select valid test sets")
+                self.noDatabaseSelectedEdgeCase = True
+
+            # Download datasets
+            self.downloadStatusLabelChanged.emit("Downloading Test Set (1/2)")
+            mnistTest = self.loadCsv(testFilePath)
+            mnistTest.databaseName = "Test_Custom"
+            self.downloadStatusLabelChanged.emit("Downloading Train Set (2/2)")
+            mnistTrain = self.loadCsv(trainFilePath)
+            mnistTrain.databaseName = "Train_Custom"
+            self.downloadStatusLabelChanged.emit("Finished Downloading")
+
+            # Store downloaded data into sharedData
+            self.dataModelReference.testDataSet = mnistTest
+            self.dataModelReference.trainDataset = mnistTrain
 
         else:
             self.errorLabelChanged.emit("Please select a database")
+            self.noDatabaseSelectedEdgeCase = True
 
     def loadCsv(self, csvLocation):
         dataset = FingerDataset() # Store loaded data into this data class

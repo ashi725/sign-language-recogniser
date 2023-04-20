@@ -8,7 +8,7 @@ from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
 
 
 class TrainTab(QWidget, TabBaseAbstractClass):
-    
+
     # Method called whenever this tab is viewed.
     def refreshWindowOnLoad(self):
         self.renderStats()
@@ -32,9 +32,9 @@ class TrainTab(QWidget, TabBaseAbstractClass):
 
         # Letters selected and number of images selected
         vboxDetails2 = QVBoxLayout()
-        self.numLettersLabel = QLabel("# Letters selected: ")
+        self.numLettersLabel = QLabel("# Letters Displayed: 0")
         self.numLettersLabel.setStyleSheet("font-size: 16px")
-        self.numSelectedImagesLabel = QLabel("Selected # of images: ")
+        self.numSelectedImagesLabel = QLabel("# Images Displayed: 0")
         self.numSelectedImagesLabel.setStyleSheet("font-size: 16px")
         vboxDetails2.addWidget(self.numLettersLabel)
         vboxDetails2.addWidget(self.numSelectedImagesLabel)
@@ -45,30 +45,30 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         vbox.addLayout(hboxDetails)
         
         # Checkboxes for letters
-        cbA = QCheckBox('A: ', self)
-        cbB = QCheckBox('B: ', self)
-        cbC = QCheckBox('C: ', self)
-        cbD = QCheckBox('D: ', self)
-        cbE = QCheckBox('E: ', self)
-        cbF = QCheckBox('F: ', self)
-        cbG = QCheckBox('G: ', self)
-        cbH = QCheckBox('H: ', self)
-        cbI = QCheckBox('I: ', self)
-        cbK = QCheckBox('K: ', self)
-        cbL = QCheckBox('L: ', self)
-        cbM = QCheckBox('M: ', self)
-        cbN = QCheckBox('N: ', self)
-        cbO = QCheckBox('O: ', self)
-        cbP = QCheckBox('P: ', self)
-        cbQ = QCheckBox('Q: ', self)
-        cbR = QCheckBox('R: ', self)
-        cbS = QCheckBox('S: ', self)
-        cbT = QCheckBox('T: ', self)
-        cbU = QCheckBox('U: ', self)
-        cbV = QCheckBox('V: ', self)
-        cbW = QCheckBox('W: ', self)
-        cbX = QCheckBox('X: ', self)
-        cbY = QCheckBox('Y: ', self)
+        cbA = QCheckBox('A:')
+        cbB = QCheckBox('B:')
+        cbC = QCheckBox('C:')
+        cbD = QCheckBox('D:')
+        cbE = QCheckBox('E:')
+        cbF = QCheckBox('F:')
+        cbG = QCheckBox('G:')
+        cbH = QCheckBox('H:')
+        cbI = QCheckBox('I:')
+        cbK = QCheckBox('K:')
+        cbL = QCheckBox('L:')
+        cbM = QCheckBox('M:')
+        cbN = QCheckBox('N:')
+        cbO = QCheckBox('O:')
+        cbP = QCheckBox('P:')
+        cbQ = QCheckBox('Q:')
+        cbR = QCheckBox('R:')
+        cbS = QCheckBox('S:')
+        cbT = QCheckBox('T:')
+        cbU = QCheckBox('U:')
+        cbV = QCheckBox('V:')
+        cbW = QCheckBox('W:')
+        cbX = QCheckBox('X:')
+        cbY = QCheckBox('Y:')
         aStat = QLabel('0')
         cStat = QLabel('0')
         bStat = QLabel('0')
@@ -180,7 +180,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         vbox.addLayout(hboxMain)
 
         self.setLayout(vbox)
-    
+
     def renderImages(self, datasetName, labelNumbersList):
         MAX_COLUMNS = 10
         rowIndex = 0
@@ -237,7 +237,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
                 labelsToDisplay.append(counter)
             counter += 1
         return labelsToDisplay
-    
+
     def renderStats(self):
         dataSet = None
         if (self.trainButton.isChecked()):
