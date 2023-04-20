@@ -10,9 +10,15 @@ from torchvision import datasets, transforms
 import torch.nn.functional as F
 import time
 
+from HyperParametersSingleton import HyperParametersSingleton
+
+hyperParameters = HyperParametersSingleton()
+
 
 # Training settings
-batch_size = 128
+batch_size = hyperParameters.batchsize
+epochs = hyperParameters.epochs
+
 device = 'cuda' if cuda.is_available() else 'cpu'
 
 print(f'Training LeNet5 Model on {device}\n{"=" * 44}')
@@ -124,7 +130,7 @@ if __name__ == '__main__':
 
     since = time.time() # Starting time of whole training
 
-    for epoch in range(1, 10):
+    for epoch in range(1,epochs+1):
 
         epoch_start = time.time() # Starting time of this epoch
 
