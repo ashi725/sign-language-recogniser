@@ -2,12 +2,14 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
 from models.DataModelSingleton import DataModelSingleton
+from models.HyperParametersSingleton import HyperParametersSingleton
 
 class TrainTab(QWidget):
 
     def __init__(self):
         super().__init__()
         self.dataModel = DataModelSingleton()
+        self.hyperParameters = HyperParametersSingleton()
 
         vbox = QVBoxLayout()
         vbox.setAlignment(Qt.AlignTop)
@@ -194,7 +196,7 @@ class TrainTab(QWidget):
 
     def show_dialog(self):
         self.dialog = QDialog(self)   
-        self.dialog.setWindowTitle('\"Database Name\" [\"Num images\"]')
+        self.dialog.setWindowTitle(self.hyperParameters.dataset + "[numimages" + "1" + "]")
         self.dialog.resize(400, 300)   
 
         # Model dropdown
@@ -202,6 +204,7 @@ class TrainTab(QWidget):
         modelLabel = QLabel("Model: ")
         self.modelDropdown = QComboBox()
         self.modelDropdown.addItems(["Not selected","LeNet-5", "ResNet", "xxxx"])
+        self.modelDropdown.currentTextChanged.connect(self.change_modelDropdown)
         hboxModel.addWidget(modelLabel)
         hboxModel.addWidget(self.modelDropdown)
 
@@ -210,6 +213,7 @@ class TrainTab(QWidget):
         batchsizeLabel = QLabel("Batchsize: ")
         self.spinboxBatchsize = QSpinBox()
         self.spinboxBatchsize.setRange(0, 500)
+        self.spinboxBatchsize.valueChanged.connect(self.change_spinboxBatchsize)
         hboxBatchsize.addWidget(batchsizeLabel)
         hboxBatchsize.addWidget(self.spinboxBatchsize)
 
@@ -218,6 +222,7 @@ class TrainTab(QWidget):
         epochNumLabel = QLabel("Epoch Number: ")
         self.spinboxEpochNum = QSpinBox()
         self.spinboxEpochNum.setRange(0, 10)
+        self.spinboxEpochNum.valueChanged.connect(self.change_spinboxEpochNum)
         hboxEpochNum.addWidget(epochNumLabel)
         hboxEpochNum.addWidget(self.spinboxEpochNum)
 
@@ -249,6 +254,9 @@ class TrainTab(QWidget):
         self.slider.valueChanged.connect(lambda value: self.spinboxValidate.setValue(100-value))
         self.spinboxTrain.valueChanged.connect(lambda value: self.slider.setValue(value))
         self.spinboxValidate.valueChanged.connect(lambda value: self.slider.setValue(100-value))
+
+        # Update parameters in singleton
+        self.slider.valueChanged.connect(self.change_slider)
 
         vboxTrain.addWidget(trainLabel)
         vboxTrain.addWidget(self.spinboxTrain)
@@ -291,7 +299,7 @@ class TrainTab(QWidget):
     def show_train_dialog(self):
         print("training model...")
         self.trainDialog = QDialog(self)
-        self.trainDialog.setWindowTitle('\"Database Name\" [\"Num images\"]')
+        self.trainDialog.setWindowTitle(self.hyperParameters.dataset + "[numimages" + "1" +"]")
         self.trainDialog.resize(400, 300)
         
         vbox = QVBoxLayout()
@@ -299,12 +307,12 @@ class TrainTab(QWidget):
         vboxHyperparameters = QVBoxLayout()
         vboxHyperparameters.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        cnnLabel = QLabel("CNN Name: ")
-        batchsizeLabel = QLabel("Batch Size: ")
-        epochNumLabel = QLabel("Epoch Number: ")
-        trainLabel = QLabel("Train Set Size: ")
-        validationLabel = QLabel("Validation Set Size: ")
-        testLabel = QLabel("Test Set Size: ")
+        cnnLabel = QLabel("CNN Name: " + self.hyperParameters.modelName)
+        batchsizeLabel = QLabel("Batch Size: " + str(self.hyperParameters.batchsize))
+        epochNumLabel = QLabel("Epoch Number: " + str(self.hyperParameters.epochs))
+        trainLabel = QLabel("Train Set Size: " + str(self.hyperParameters.train))
+        validationLabel = QLabel("Validation Set Size: " + str(self.hyperParameters.validation))
+        testLabel = QLabel("Test Set Size: " + str(self.hyperParameters.test))
         vboxHyperparameters.addWidget(cnnLabel)
         vboxHyperparameters.addWidget(batchsizeLabel)
         vboxHyperparameters.addWidget(epochNumLabel)
@@ -359,6 +367,22 @@ class TrainTab(QWidget):
 
         self.trainDialog.setLayout(vbox)
         self.trainDialog.show()
+
+    def change_spinboxEpochNum(self):
+        self.hyperParameters.epochs = self.spinboxEpochNum.value()
+
+    def change_spinboxBatchsize(self):
+        self.hyperParameters.batchsize = self.spinboxBatchsize.value()
+    
+    def change_modelDropdown(self):
+        self.hyperParameters.modelName = self.modelDropdown.currentText()
+    
+    def change_slider(self):
+        self.hyperParameters.train = self.slider.value()
+        self.hyperParameters.validation = 100 - self.slider.value()
+        self.hyperParameters.test = 0
+        self.spinboxTrain.setValue(self.hyperParameters.train)
+        self.spinboxValidate.setValue(self.hyperParameters.validation)
 
     # Call after training finished
     def showFinishedButtons(self):

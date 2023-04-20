@@ -22,6 +22,7 @@ class MyApp(QWidget):
         trainTab = TrainTab()
         testTab = TestTab()
         
+
         self.tabWidget.addTab(datasetTab, 'Dataset')
         self.tabWidget.addTab(trainTab, 'Train')
         self.tabWidget.addTab(testTab, 'Test')
