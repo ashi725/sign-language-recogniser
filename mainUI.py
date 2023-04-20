@@ -34,7 +34,7 @@ class MyApp(QWidget):
         self.setLayout(vbox)
 
         self.setWindowTitle('Test Application')
-        self.move(200, 200)
+        self.move(800, -800)
         self.resize(800, 600)        
         self.show()
 

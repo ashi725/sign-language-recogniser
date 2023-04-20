@@ -209,7 +209,7 @@ class ImageViewer(QWidget):
             if child.widget():
                 child.widget().deleteLater()
 
-        # This method generates a list of numbers according to labels of the checkbox
+    # This method generates a list of numbers according to labels of the checkbox
 
     def generateLabelNumberList(self):
         labelsToDisplay = []
