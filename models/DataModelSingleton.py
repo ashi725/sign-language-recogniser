@@ -10,7 +10,7 @@ class DataModelSingleton:
         return cls.instance
 
     trainDataset = None
-    testDataSet = None
+    testDataset = None
 
 class FingerDataset:
     def __init__(self):

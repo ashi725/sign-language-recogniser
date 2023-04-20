@@ -191,7 +191,7 @@ class DownloadThread(QThread):
         self.stopFlag.set()
 
     def stopCleanup(self):
-        self.dataModelReference.testDataSet = None
+        self.dataModelReference.testDataset = None
         self.dataModelReference.trainDataset = None
         self.progressBarChanged.emit(0)
         self.finishDownloadingFlag.emit(1)
@@ -211,7 +211,7 @@ class DownloadThread(QThread):
             self.downloadStatusLabelChanged.emit("Finished Downloading")
 
             # Store downloaded data into sharedData
-            self.dataModelReference.testDataSet = mnistTest
+            self.dataModelReference.testDataset = mnistTest
             self.dataModelReference.trainDataset = mnistTrain
 
         elif self.selectedDatabase == "Custom":
@@ -234,7 +234,7 @@ class DownloadThread(QThread):
             self.downloadStatusLabelChanged.emit("Finished Downloading")
 
             # Store downloaded data into sharedData
-            self.dataModelReference.testDataSet = mnistTest
+            self.dataModelReference.testDataset = mnistTest
             self.dataModelReference.trainDataset = mnistTrain
 
         else:

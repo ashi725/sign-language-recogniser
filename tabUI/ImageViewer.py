@@ -176,7 +176,7 @@ class ImageViewer(QWidget):
         if (datasetName == 'train'):
             dataset = self.dataModel.trainDataset
         else:
-            dataset = self.dataModel.testDataSet
+            dataset = self.dataModel.testDataset
 
         totalImagesCount = 0
 
@@ -225,17 +225,17 @@ class ImageViewer(QWidget):
         return labelsToDisplay
 
     def renderStats(self):
-        dataSet = None
+        dataset = None
         if (self.trainButton.isChecked()):
-            dataSet = self.dataModel.trainDataset
+            dataset = self.dataModel.trainDataset
         else:
-            dataSet = self.dataModel.testDataSet
+            dataset = self.dataModel.testDataset
 
-        self.databaseNameLabel.setText("Database Name: {}".format(dataSet.databaseName))
+        self.databaseNameLabel.setText("Database Name: {}".format(dataset.databaseName))
         self.numTotalImagesLabel.setText("Total # Images: {}".format(
-            self.dataModel.testDataSet.totalImages + self.dataModel.trainDataset.totalImages))
+            self.dataModel.testDataset.totalImages + self.dataModel.trainDataset.totalImages))
 
-        totalImagesArrayNumber = dataSet.totalImagesArray
+        totalImagesArrayNumber = dataset.totalImagesArray
 
         # Col1 stats
         tempCounter = 0
