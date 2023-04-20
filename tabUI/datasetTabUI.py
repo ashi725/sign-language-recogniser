@@ -222,6 +222,7 @@ class DownloadThread(QThread):
             if testFilePath == "" or trainFilePath=="":
                 self.errorLabelChanged.emit("Please select valid test sets")
                 self.noDatabaseSelectedEdgeCase = True
+                return
 
             # Download datasets
             self.downloadStatusLabelChanged.emit("Downloading Test Set (1/2)")
