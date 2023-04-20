@@ -11,8 +11,14 @@ import torchvision.models as models
 import torch.nn as nn
 import torch.optim as optim
 
+from HyperParametersSingleton import HyperParametersSingleton
+
+hyperParameters = HyperParametersSingleton()
+
 # Training settings
-batch_size = 128
+batch_size = hyperParameters.batchsize
+epochs = hyperParameters.epochs
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f'Training MNIST Model on {device}\n{"=" * 44}')
 
@@ -36,7 +42,7 @@ test_loader = data.DataLoader(dataset=test_dataset,
                               shuffle=False)
 
 # ResNet Model
-resnet = models.resnet18(pretrained=False) # Load ResNet model architecture
+resnet = models.resnet18(weights = None) # Load ResNet model architecture
 
 # Replace first convolutional layer and fully connected layer
 resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
@@ -48,7 +54,7 @@ model = resnet.to(device) # Move to specified device
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-def train(epoch):
+def train(epochs):
 
     model.train() # Set model to training mode
 
@@ -64,7 +70,7 @@ def train(epoch):
         # Print training progress
         if batch_idx % 10 == 0:
             print('Train Epoch: {} | Batch Status: {}/{} ({:.0f}%) | Loss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
+                epochs, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
             
 
@@ -78,9 +84,16 @@ def test():
             data, target = data.to(device), target.to(device) # Move the input data and target labels
             output = model(data) # Pass data through the model
             test_loss += criterion(output, target).item() # Sum up batch loss
-            pred = output.data.max(1, keepdim=True)[1] # Get the index of the max
-            correct += pred.eq(target.data.view_as(pred)).cpu().sum() # Sum up the correct predictions
+            pred = output.argmax(dim=1, keepdim=True) # Get the index of the max
+            correct += pred.eq(target.view_as(pred)).sum().item() # Sum up the correct predictions
 
     test_loss /= len(test_loader.dataset)
     print(f'===========================\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} '
           f'({100. * correct / len(test_loader.dataset):.0f}%)')
+
+# Training loop
+for epoch in range(1, epochs+1):
+    train(epoch)
+    test()
+
+print("Training finished!")
