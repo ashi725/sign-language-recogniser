@@ -10,8 +10,8 @@ class HyperParametersSingleton:
     # Details and hyperparameters used for model.
     dataset = None
     modelName = None
-    batchsize = None
-    epochs = None
+    batchsize = 128
+    epochs = 2
     train = None
     validation = None
     test = None

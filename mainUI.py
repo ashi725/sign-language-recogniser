@@ -17,7 +17,8 @@ class MyApp(QWidget):
     def initUI(self):
 
         self.tabWidget = QTabWidget()
-        
+        self.tabWidget.currentChanged.connect(self.onTabChanged)
+
         datasetTab = DatasetTab()
         trainTab = TrainTab()
         testTab = TestTab()
@@ -33,9 +34,13 @@ class MyApp(QWidget):
         self.setLayout(vbox)
 
         self.setWindowTitle('Test Application')
-        self.move(900, -800)
+        self.move(200, 200)
         self.resize(800, 600)        
         self.show()
+
+    def onTabChanged(self):
+        currentTab = self.tabWidget.currentWidget()
+        currentTab.refreshWindowOnLoad()
 
 
 

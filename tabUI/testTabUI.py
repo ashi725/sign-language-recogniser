@@ -1,7 +1,12 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
-class TestTab(QWidget):
+from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
+
+class TestTab(QWidget, TabBaseAbstractClass):
+    def refreshWindowOnLoad(self):
+        pass
+    
     def __init__(self):
         super().__init__()
 

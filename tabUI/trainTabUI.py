@@ -3,8 +3,15 @@ from PyQt5.QtWidgets import *
 
 from models.DataModelSingleton import DataModelSingleton
 from models.HyperParametersSingleton import HyperParametersSingleton
+from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
 
-class TrainTab(QWidget):
+
+
+class TrainTab(QWidget, TabBaseAbstractClass):
+    
+    # Method called whenever this tab is viewed.
+    def refreshWindowOnLoad(self):
+        self.renderStats()
 
     def __init__(self):
         super().__init__()
@@ -62,44 +69,74 @@ class TrainTab(QWidget):
         cbW = QCheckBox('W: ', self)
         cbX = QCheckBox('X: ', self)
         cbY = QCheckBox('Y: ', self)
+        aStat = QLabel('0')
+        cStat = QLabel('0')
+        bStat = QLabel('0')
+        dStat = QLabel('0')
+        eStat = QLabel('0')
+        fStat = QLabel('0')
+        gStat = QLabel('0')
+        hStat = QLabel('0')
+        iStat = QLabel('0')
+        kStat = QLabel('0')
+        lStat = QLabel('0')
+        mStat = QLabel('0')
+        nStat = QLabel('0')
+        oStat = QLabel('0')
+        pStat = QLabel('0')
+        qStat = QLabel('0')
+        rStat = QLabel('0')
+        sStat = QLabel('0')
+        tStat = QLabel('0')
+        uStat = QLabel('0')
+        vStat = QLabel('0')
+        wStat = QLabel('0')
+        xStat = QLabel('0')
+        yStat = QLabel('0')
 
         self.letterCol1CheckBoxes = [cbA, cbB, cbC, cbD, cbE, cbF, cbG, cbH, cbI, cbK, cbL, cbM]
+        self.letterCol1Stats = [aStat, bStat, cStat, dStat, eStat, fStat, gStat, hStat, iStat, kStat, lStat, mStat]
         self.letterCol2CheckBoxes = [cbN, cbO, cbP, cbQ, cbR, cbS, cbT, cbU, cbV, cbW, cbX, cbY]
-        
-        # A-M and select all button
-        vboxLetters1 = QVBoxLayout()
+        self.letterCol2Stats = [nStat, oStat, pStat, qStat, rStat, sStat, tStat, uStat, vStat, wStat, xStat, yStat]
+
+        # Left side Display checkboxes
+        hboxLeft = QHBoxLayout()
+        checkBoxGrid = QGridLayout()
+        hboxLeft.addLayout(checkBoxGrid)
+
+        # # A-M and select all button
+        checkBoxGrid.addWidget(self.letterCol2Stats[0], 0, 0)
+        checkBoxGrid.addWidget(self.letterCol1CheckBoxes[0], 0, 1)
+
+        tempCounter = 0
         for letterCheckBox in self.letterCol1CheckBoxes:
-            letterCheckBox.setStyleSheet("font-size: 16px")
-            vboxLetters1.addWidget(letterCheckBox)
-        
+            checkBoxGrid.addWidget(self.letterCol1CheckBoxes[tempCounter], tempCounter, 0)
+            checkBoxGrid.addWidget(self.letterCol1Stats[tempCounter], tempCounter, 1)
+            tempCounter += 1
         selectAllButton = QPushButton("Select all")
         selectAllButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         selectAllButton.clicked.connect(self.onSelectAllCheckboxes)
-        
-        vboxLetters1.addWidget(selectAllButton)
+        checkBoxGrid.addWidget(selectAllButton, tempCounter, 0, 1, 2)
 
-        # N-Y and clear button
-        vboxLetters2 = QVBoxLayout()
-        for letterCheckBox in self.letterCol2CheckBoxes:
-            letterCheckBox.setStyleSheet("font-size: 16px")
-            vboxLetters2.addWidget(letterCheckBox)
-        
+        # # N-Y and clear button
+        tempCounter = 0
+        for letterCheckBox in self.letterCol1CheckBoxes:
+            checkBoxGrid.addWidget(self.letterCol2CheckBoxes[tempCounter], tempCounter, 2)
+            checkBoxGrid.addWidget(self.letterCol2Stats[tempCounter], tempCounter, 3)
+            tempCounter += 1
         selectNoneButton = QPushButton("Clear")
         selectNoneButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         selectNoneButton.clicked.connect(self.onClearButtonCheckboxes)
-        vboxLetters2.addWidget(selectNoneButton)
-
-        # Left side of main layout - letters and select/clear buttons
-        hboxLeft = QHBoxLayout()
-        hboxLeft.addLayout(vboxLetters1)
-        hboxLeft.addLayout(vboxLetters2)
-
+        checkBoxGrid.addWidget(selectNoneButton, tempCounter, 2, 1, 2)
 
         # Train, test and view 
         self.trainButton = QRadioButton("Train")
         self.trainButton.setStyleSheet("font-size: 16px")
         self.testButton = QRadioButton("Test")
         self.testButton.setStyleSheet("font-size: 16px")
+        self.trainButton.setChecked(True)
+        self.trainButton.clicked.connect(self.onRadioButtonPress)
+        self.testButton.clicked.connect(self.onRadioButtonPress)
         viewButton = QPushButton("View")
         viewButton.setStyleSheet("font-size: 16px")
         viewButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -156,16 +193,19 @@ class TrainTab(QWidget):
         else:
             dataset = self.dataModel.testDataSet
 
+        totalImagesCount = 0
+
         for labelNumber in labelNumbersList:
             # Check if label exist in dataset. If false skip
             if str(labelNumber) not in dataset.labeledSet:
                 continue
 
             fingerImageList = dataset.labeledSet[str(labelNumber)]
+
             for fingerImage in fingerImageList:
                 imageLabel = QLabel()
                 imageLabel.setPixmap(fingerImage.pixMap)
-
+                totalImagesCount += 1
                 self.imageGridLayout.addWidget(imageLabel, rowIndex, columnIndex)
 
                 # Grid pos algorithm
@@ -173,6 +213,10 @@ class TrainTab(QWidget):
                 if (columnIndex > MAX_COLUMNS):
                     columnIndex = 0
                     rowIndex += 1
+
+        # Update Stats
+        self.numLettersLabel.setText("# Letters Displayed: {}".format(len(labelNumbersList)))
+        self.numSelectedImagesLabel.setText("# Images Displayed: {}".format(totalImagesCount))
 
     def clearImages(self):
         while self.imageGridLayout.count():
@@ -193,6 +237,28 @@ class TrainTab(QWidget):
                 labelsToDisplay.append(counter)
             counter += 1
         return labelsToDisplay
+    
+    def renderStats(self):
+        dataSet = None
+        if (self.trainButton.isChecked()):
+            dataSet = self.dataModel.trainDataset
+        else:
+            dataSet = self.dataModel.testDataSet
+
+        self.databaseNameLabel.setText("Database Name: {}".format(dataSet.databaseName))
+        self.numTotalImagesLabel.setText("Total # Images: {}".format(self.dataModel.testDataSet.totalImages + self.dataModel.trainDataset.totalImages))
+
+        totalImagesArrayNumber = dataSet.totalImagesArray
+
+        # Col1 stats
+        tempCounter = 0
+        for statLabel in self.letterCol1Stats:
+            statLabel.setText(str(totalImagesArrayNumber[tempCounter]))
+            tempCounter += 1
+        # Col2 Stats
+        for statLabel in self.letterCol2Stats:
+            statLabel.setText(str(totalImagesArrayNumber[tempCounter]))
+            tempCounter += 1
 
     def show_dialog(self):
         self.dialog = QDialog(self)   
@@ -453,7 +519,8 @@ class TrainTab(QWidget):
     def onContinueButton(self):
         pass
 
-
+    def onRadioButtonPress(self):
+        self.renderStats()
 
 
 

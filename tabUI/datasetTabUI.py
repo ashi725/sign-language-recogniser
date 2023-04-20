@@ -11,9 +11,11 @@ import csv
 
 from models.DataModelSingleton import DataModelSingleton, FingerDataset, FingerImage
 from models.HyperParametersSingleton import HyperParametersSingleton
-from tabUI.trainTabUI import TrainTab
+from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
 
-class DatasetTab(QWidget):
+class DatasetTab(QWidget,TabBaseAbstractClass):
+    def refreshWindowOnLoad(self):
+        pass
     def __init__(self):
 
         # Init variables
