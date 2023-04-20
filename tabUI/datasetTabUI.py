@@ -10,6 +10,8 @@ from PyQt5.QtWidgets import *
 import csv
 
 from models.DataModelSingleton import DataModelSingleton, FingerDataset, FingerImage
+from models.HyperParametersSingleton import HyperParametersSingleton
+from tabUI.trainTabUI import TrainTab
 
 class DatasetTab(QWidget):
     def __init__(self):
@@ -18,6 +20,7 @@ class DatasetTab(QWidget):
         super().__init__()
         vbox = QVBoxLayout()
         self.dataModel = DataModelSingleton()
+        self.hyperParameters = HyperParametersSingleton()
         self.downloadThreadInstance = None
         
         # Import Button
@@ -29,14 +32,17 @@ class DatasetTab(QWidget):
         vbox.addWidget(importDatasetButton)
         vbox.addStretch()
         self.setLayout(vbox)
-        
+
+    
+
     def show_dialog(self):
         dialog = QDialog(self)   
         dialog.setWindowTitle('Import dataset')
         dialog.setWindowFlags(dialog.windowFlags() & ~Qt.WindowCloseButtonHint)
         dialog.setFixedWidth(400)
-        dropdown = QComboBox(dialog)
-        dropdown.addItems(['Not selected', 'MNIST', 'xxxx'])
+        self.dropdown = QComboBox(dialog)
+        self.dropdown.addItems(['Not selected', 'MNIST', 'xxxx'])
+        self.dropdown.currentIndexChanged.connect(self.dropdown_changed)
 
         # Error Label
         self.errorLabel = QLabel("")
@@ -65,7 +71,7 @@ class DatasetTab(QWidget):
         vbox.setAlignment(Qt.AlignHCenter)
 
         hbox = QHBoxLayout()
-        hbox.addWidget(dropdown)
+        hbox.addWidget(self.dropdown)
         hbox.addWidget(self.downloadButton)
         hbox.addWidget(self.stopButton)
 
@@ -86,11 +92,14 @@ class DatasetTab(QWidget):
         dialog.setLayout(vbox)
 
         # Event Binders
-        self.downloadButton.clicked.connect(lambda: self.onDownloadDatabase(dropdown.currentText()))
+        self.downloadButton.clicked.connect(lambda: self.onDownloadDatabase(self.dropdown.currentText()))
         self.stopButton.clicked.connect(self.onStopDownloadButton)
 
-        dialog.show()
+        dialog.show()    
 
+    def dropdown_changed(self):
+        self.hyperParameters.dataset = self.dropdown.currentText() 
+        print("drop down changed to " + self.dropdown.currentText() )
     
     def onDownloadDatabase(self, selectedDatabase):
 
@@ -114,7 +123,6 @@ class DatasetTab(QWidget):
         self.downloadThreadInstance.finishDownloadingFlag.connect(self.onDownloadFinish)
 
         self.downloadThreadInstance.start()
-
 
     def onStopDownloadButton(self):
         self.downloadThreadInstance.stop()
