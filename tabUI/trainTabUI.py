@@ -139,9 +139,10 @@ class TrainTab(QWidget, TabBaseAbstractClass):
     def show_train_dialog(self):
 
         print("training model...")
-        self.modelTrainerRunner = ModelTrainerThread(self.hyperParameters)
+        self.modelTrainerRunner = ModelTrainerThread(self.hyperParameters, self.dataModel)
         self.modelTrainerRunner.start()
         self.modelTrainerRunner.statusUpdate.connect(self.updateTrainingDataText)
+        self.modelTrainerRunner.progressBarChanged.connect(self.updateProgressBar)
 
         self.trainDialog = QDialog(self)
         self.trainDialog.setWindowTitle(self.hyperParameters.dataset + "[numimages" + "1" +"]")
@@ -175,9 +176,9 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         hboxInfo.addWidget(self.trainingData)
 
         # Progress bar
-        progressBar = QProgressBar(self)
-        progressBar.setRange(0, 100)
-        progressBar.setValue(0)
+        self.progressBar = QProgressBar(self)
+        self.progressBar.setRange(0, 100)
+        self.progressBar.setValue(0)
 
         # Cancel Button
         hboxButtons = QHBoxLayout()
@@ -208,7 +209,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.testModelButton.setVisible(False)
         
         vbox.addLayout(hboxInfo)
-        vbox.addWidget(progressBar)
+        vbox.addWidget(self.progressBar)
         vbox.addLayout(hboxButtons)
 
         self.trainDialog.setLayout(vbox)
@@ -282,3 +283,8 @@ class TrainTab(QWidget, TabBaseAbstractClass):
 
     def updateTrainingDataText(self, text):
         self.trainingData.setText(text)
+
+    def updateProgressBar(self, value):
+        print(value)
+        self.progressBar.setValue(value)
+

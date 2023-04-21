@@ -23,7 +23,7 @@ class LeNet5(nn.Module):
         # Fully connected layers
         self.fc1 = nn.Linear(16 * 7 * 7, 120)
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        self.fc3 = nn.Linear(84, 24)
 
     # Definition of the forward pass through the LeNet5 model
     def forward(self, x):

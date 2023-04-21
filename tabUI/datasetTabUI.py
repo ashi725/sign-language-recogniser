@@ -270,7 +270,7 @@ class DownloadThread(QThread):
                 # Dissect columns
                 label = data[0:1][0]  # Number classifying type of symbol
                 pixels = data[1:]
-                pixels = np.array(pixels, dtype='int64')
+                pixels = np.array(pixels, dtype='uint8')
                 pixels = pixels.reshape((28, 28))
 
                 # Generate image for PYQT
@@ -278,7 +278,7 @@ class DownloadThread(QThread):
                 pixMap = QPixmap.fromImage(ImageQt(pillowImage))
 
                 # Save img information
-                imageClass = FingerImage(label, pixels, pixMap)
+                imageClass = FingerImage(label, pixels, pixMap, pillowImage)
                 dataset.addFingerImage(label, imageClass)
 
                 # Update progressbar
