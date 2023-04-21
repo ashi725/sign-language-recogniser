@@ -1,3 +1,5 @@
+from models.DataModelSingleton import FingerDataset
+
 
 class PredictDataSingleton:
 
@@ -7,7 +9,19 @@ class PredictDataSingleton:
         return cls.instance
 
     latestCameraFeedImage = None
-    listToPredict = []
+    predictionDataset = FingerDataset()
+
+    # Latest model settings
+    TrainedModel = None
+    latestTrainedModelTrain = None
+    latestTrainedModelValidate = None
+    latestTrainedModelDnnName = None
+    latestTrainedModelBatchSize = None
+    latestTrainedModelEpoch = None
+
+
+
+
 
 class ImagePrediction:
     pixmap = None

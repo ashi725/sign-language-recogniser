@@ -12,6 +12,7 @@ class ImageViewer(QWidget):
         super().__init__()
         self.dataModel = DataModelSingleton()
         self.hyperParameters = HyperParametersSingleton()
+        self.imageLabelList = []
 
         vbox = QVBoxLayout()
         vbox.setAlignment(Qt.AlignTop)
@@ -188,11 +189,11 @@ class ImageViewer(QWidget):
             fingerImageList = dataset.labeledSet[str(labelNumber)]
 
             for fingerImage in fingerImageList:
-                imageLabel = QLabel()
+                imageLabel = SelectableLabel(fingerImage)
                 imageLabel.setPixmap(fingerImage.pixMap)
                 totalImagesCount += 1
                 self.imageGridLayout.addWidget(imageLabel, rowIndex, columnIndex)
-
+                self.imageLabelList.append(imageLabel)
                 # Grid pos algorithm
                 columnIndex += 1
                 if (columnIndex > MAX_COLUMNS):
@@ -204,6 +205,7 @@ class ImageViewer(QWidget):
         self.numSelectedImagesLabel.setText("# Images Displayed: {}".format(totalImagesCount))
 
     def clearImages(self):
+        self.imageLabelList = []
         while self.imageGridLayout.count():
             child = self.imageGridLayout.takeAt(0)
             if child.widget():
@@ -274,3 +276,27 @@ class ImageViewer(QWidget):
     def onRadioButtonPress(self):
         self.renderStats()
 
+    def getSelectedImages(self):
+        selectedImages = []
+        for selectableLabel in self.imageLabelList:
+            if selectableLabel.is_selected():
+                selectedImages.append(selectableLabel.imageDetails)
+        return selectedImages
+
+class SelectableLabel(QLabel):
+    def __init__(self, imageDetails, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._selected = False
+        self.imageDetails = imageDetails # Stores everything about the image
+        self.setAlignment(Qt.AlignCenter)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._selected = not self._selected
+            if (self.is_selected()):
+                self.setStyleSheet("background-color: yellow; padding: 4px;")
+            else:
+                self.setStyleSheet("background-color: transparent; padding: 4px;")
+
+    def is_selected(self):
+        return self._selected

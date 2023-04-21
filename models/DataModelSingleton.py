@@ -87,5 +87,7 @@ class FingerImage:
         self.pixMap = pixmap # This is the PixMap, Image used to display for PYQT
         self.label = label
 
+        self.cameraImage = None # For high quality camera image. The vars above will be scaled down to 28x28px
+
 # Create init singleton.
 singleton = DataModelSingleton()

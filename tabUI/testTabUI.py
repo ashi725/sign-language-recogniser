@@ -6,13 +6,16 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import *
 
+from models.DataModelSingleton import FingerDataset
 from models.PredictDataSingleton import PredictDataSingleton
+from models.PredicterRunnerThread import PredicterRunnerThread
+from models.save_mechanism.ModelSaver import SaveMechanism
 from tabUI.ImageViewer import ImageViewer
 from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
 
 class TestTab(QWidget, TabBaseAbstractClass):
     def refreshWindowOnLoad(self):
-        pass
+        self.updateTotalImagesLabel()
     
     def __init__(self):
         super().__init__()
@@ -33,7 +36,7 @@ class TestTab(QWidget, TabBaseAbstractClass):
 
         loadModel = QPushButton("Load model from file")
         loadModel.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        loadModel.clicked.connect(self.show_file_dialog)
+        loadModel.clicked.connect(self.on_load_model_button)
 
         hbox = QHBoxLayout()
         hbox.addLayout(vboxHyperparameters)
@@ -52,7 +55,7 @@ class TestTab(QWidget, TabBaseAbstractClass):
         hboxButtons = QHBoxLayout()
         datasetImagesButton = QPushButton("Dataset images")
         datasetImagesButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        datasetImagesButton.clicked.connect(self.show_dataset_dialog)
+        datasetImagesButton.clicked.connect(self.on_show_dataset_Button)
 
         webcamButton = QPushButton("Webcam images")
         webcamButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -60,14 +63,72 @@ class TestTab(QWidget, TabBaseAbstractClass):
         hboxButtons.addWidget(datasetImagesButton)
         hboxButtons.addWidget(webcamButton)
 
+        self.totalImagesToPredictLabel = QLabel("Images Chosen: 0")
+        clearImagesButton = QPushButton("Clear chosen Images")
+        clearImagesButton.clicked.connect(self.onClearImagesButton)
+        self.predictButton = QPushButton("Predict")
+        self.predictButton.clicked.connect(self.onPredictButton)
+        self.predictButton.setDisabled(True)
+
         vbox.addLayout(hboxButtons)
-
         self.setLayout(vbox)
+        vbox.addWidget(self.totalImagesToPredictLabel)
+        vbox.addWidget(clearImagesButton)
+        vbox.addWidget(self.predictButton)
 
-    def show_file_dialog(self):
-        fname = QFileDialog.getOpenFileName(self, 'Open file', './')
+    def on_load_model_button(self):
+        dialog = QDialog(self)
+        dialog.setModal(True)
+        dialog.show()
 
-    def show_dataset_dialog(self):
+        vbox = QVBoxLayout()
+        dialog.setLayout(vbox)
+
+        infoLablel = QLabel("Select saved models")
+        vbox.addWidget(infoLablel)
+
+        saver = SaveMechanism()
+        pyTorchSaves = saver._loadAll()
+
+        pyTorchSaveRadios = [] # The position in this arr equals the save
+        buttonGroup = QButtonGroup()
+
+        # Display radio selection
+        for index in range(0, len(pyTorchSaves)):
+            radio = QRadioButton(pyTorchSaves[index].filePath) # Index is same as the pyTorchSaveRadios position
+            pyTorchSaveRadios.append(radio)
+            buttonGroup.addButton(radio, id=index)
+            vbox.addWidget(radio)
+
+        # Choose button
+        def onChooseModelButton():
+            index = buttonGroup.checkedId()
+            if (index != -1):
+                saveLocation = pyTorchSaveRadios[index].text()
+                pyTorchData = saver.loadTorchData(saveLocation)
+                pyTorchModel = saver.loadTorchModel(saveLocation)
+
+                # Load into sigleton memory
+                self.predictionData.TrainedModel = pyTorchModel
+                self.predictionData.latestTrainedModelTrain = pyTorchData.trainRatio
+                self.predictionData.latestTrainedModelValidate = pyTorchData.valRatio
+                self.predictionData.latestTrainedModelDnnName = pyTorchData.dnnName
+                self.predictionData.latestTrainedModelBatchSize = pyTorchData.batchSize
+                self.predictionData.latestTrainedModelEpoch = pyTorchData.epochNumber
+                self.predictButton.setDisabled(False)
+                dialog.close()
+        chooseModelButton = QPushButton("Select")
+        chooseModelButton.clicked.connect(onChooseModelButton)
+        vbox.addWidget(chooseModelButton)
+
+
+
+
+
+    ####
+    # Button handlers
+    #####
+    def on_show_dataset_Button(self):
         imageView = QDialog(self)
         imageView.resize(500, 500)
         imageView.setModal(True)
@@ -76,34 +137,64 @@ class TestTab(QWidget, TabBaseAbstractClass):
         imageView.setLayout(vbox)
 
         imgViewer = ImageViewer()
+        imgViewer.renderStats()
         vbox.addWidget(imgViewer)
 
+        # Select Button
+        chooseButton = QPushButton("Choose highlighted images for testing")
+        vbox.addWidget(chooseButton)
+
+        def onChooseButtonPress():
+            selectedImages = imgViewer.getSelectedImages()
+
+            for img in selectedImages:
+                self.predictionData.predictionDataset.addFingerImage(str(img.label), img)
+            self.updateTotalImagesLabel()
+            imageView.close()
+
+
+
+        chooseButton.clicked.connect(onChooseButtonPress)
         imageView.show()
 
     def on_camera_button(self):
         cameraDialog = QDialog(self)
         cameraDialog.resize(500, 500)
         cameraDialog.setModal(True)
-
+        cameraDialog.rejected.connect(self.on_camera_dialog_close)
         hBox = QHBoxLayout(cameraDialog)
         self.cameraLabel = QLabel()
         hBox.addWidget(self.cameraLabel)
         self.cameraLabel.setText("Loading Camera")
         cameraDialog.show()
 
-        cameraThread = CameraThread(self.predictionData)
-        cameraThread.newFrameFlag.connect(self.render_latest_frame)
-        cameraThread.start()
+        self.cameraThread = CameraThread(self.predictionData)
+        self.cameraThread.newFrameFlag.connect(self.render_latest_frame)
+        self.cameraThread.start()
 
         snapButton = QPushButton("Capture")
         hBox.addWidget(snapButton)
-        snapButton.clicked.connect(lambda: cameraThread.saveImage())
+        snapButton.clicked.connect(lambda: self.cameraThread.saveImage())
 
+    def on_camera_dialog_close(self):
+        self.cameraThread.stop()
 
     def render_latest_frame(self, image):
         pixelMap = QPixmap.fromImage(image)
         self.cameraLabel.setPixmap(pixelMap)
         self.cameraLabel.resize(pixelMap.width(), pixelMap.height())
+
+    def updateTotalImagesLabel(self):
+        self.totalImagesToPredictLabel.setText("Images Chosen: {}".format(self.predictionData.predictionDataset.totalImages))
+
+    def onClearImagesButton(self):
+        self.predictionData.predictionDataset = FingerDataset()
+        self.updateTotalImagesLabel()
+
+    def onPredictButton(self):
+        print("Predict")
+        predictThread = PredicterRunnerThread(self.predictionData)
+        predictThread.start()
 
 class CameraThread(QThread):
     newFrameFlag = pyqtSignal(QImage)
@@ -112,11 +203,13 @@ class CameraThread(QThread):
         super().__init__()
         self.databaseSingleton = dataSingleton
         self.saveFlag = threading.Event()
+        self.stopFlag = threading.Event()
+
     # https://stackoverflow.com/questions/44404349/pyqt-showing-video-stream-from-opencv
     def run(self):
         cap = cv2.VideoCapture(0) # Remember to release when this ends
 
-        while True:
+        while not self.stopFlag.is_set():
             ret, frame = cap.read()
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             height, width = gray_frame.shape
@@ -128,6 +221,10 @@ class CameraThread(QThread):
                 print("Image saved")
                 # todo Save image into correct format
                 self.saveFlag.clear()
+        cap.release()
+
+    def stop(self):
+        self.stopFlag.set()
 
     def saveImage(self):
         self.saveFlag.set()

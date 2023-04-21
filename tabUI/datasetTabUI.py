@@ -246,7 +246,7 @@ class DownloadThread(QThread):
 
         # Check if stop flag set
         if self.stopFlag.is_set():
-            return
+            return dataset
 
         # https://stackoverflow.com/questions/71175143/how-to-read-and-display-mnist-dataset
         with open(csvLocation, 'r') as csv_file:
