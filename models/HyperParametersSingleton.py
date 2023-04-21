@@ -16,4 +16,13 @@ class HyperParametersSingleton:
     validation = None
     test = None
 
+    # Latest model settings
+    latestTrainedModel = None
+    latestTrainedModelTrain = None
+    latestTrainedModelValidate = None
+    latestTrainedModelDnnName = None
+    latestTrainedModelBatchSize = None
+    latestTrainedModelEpoch = None
+
+
 singleton = HyperParametersSingleton()

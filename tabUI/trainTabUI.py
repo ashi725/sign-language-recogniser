@@ -1,12 +1,13 @@
 import os
 from subprocess import Popen
 import subprocess
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QFileInfo
 from PyQt5.QtWidgets import *
 
 from models.DataModelSingleton import DataModelSingleton
 from models.HyperParametersSingleton import HyperParametersSingleton
 from models.ModelRunnerThread import ModelTrainerThread
+from models.save_mechanism.ModelSaver import SaveMechanism
 from tabUI.ImageViewer import ImageViewer
 from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
 
@@ -143,6 +144,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.modelTrainerRunner.start()
         self.modelTrainerRunner.statusUpdate.connect(self.updateTrainingDataText)
         self.modelTrainerRunner.progressBarChanged.connect(self.updateProgressBar)
+        self.modelTrainerRunner.finishStatus.connect(self.onTrainingFInish)
 
         self.trainDialog = QDialog(self)
         self.trainDialog.setWindowTitle(self.hyperParameters.dataset + "[numimages" + "1" +"]")
@@ -186,7 +188,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.cancelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         hboxButtons.addWidget(self.cancelButton)
         #self.cancelButton.clicked.connect(self.trainDialog.reject)
-        self.cancelButton.clicked.connect(self.showFinishedButtons) # just here for now to test the buttons
+        self.cancelButton.clicked.connect(self.onCancelButton) # just here for now to test the buttons
 
         # 3 different buttons after training finishes - train new model, save as, test model
         self.trainNewModelButton = QPushButton("Train new model")
@@ -195,7 +197,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
 
         self.saveAsButton = QPushButton("Save as")
         self.saveAsButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.saveAsButton.clicked.connect(self.showSaveAs)
+        self.saveAsButton.clicked.connect(self.onSaveButton)
 
         self.testModelButton = QPushButton("Test model")
         self.testModelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -234,6 +236,8 @@ class TrainTab(QWidget, TabBaseAbstractClass):
     # Call after training finished
     def showFinishedButtons(self):
         print("finished training")
+        self.saveAsButton.setDisabled(False)
+        self.testModelButton.setDisabled(False)
         self.cancelButton.setVisible(False)
         self.trainNewModelButton.setVisible(True)
         self.saveAsButton.setVisible(True)
@@ -242,38 +246,25 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.modelTrainerRunner.stop()
 
     # Dialog to save model
-    def showSaveAs(self):
-        print("save as")
-        self.saveAsDialog = QDialog(self)
-        self.saveAsDialog.setWindowTitle('Save as')
+    def onSaveButton(self):
+        # Show the save dialog
+        file_name, _ = QFileDialog.getSaveFileName(None, "Save File", "", "Pytorch Model (*.pt);;All Files (*)")
+        saver = SaveMechanism()
 
-        self.modelName = QTextEdit()
-        self.modelName.setFixedSize(200, 20)
-
-        saveButton = QPushButton("Save")
-        saveButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        saveButton.clicked.connect(self.saveAsDialog.reject)
-        saveButton.clicked.connect(self.save)
-
-        cancelButton = QPushButton("Cancel")
-        cancelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        cancelButton.clicked.connect(self.saveAsDialog.reject)
-
-        hbox = QHBoxLayout()
-        hbox.addWidget(saveButton)
-        hbox.addWidget(cancelButton)
-
-        vbox = QVBoxLayout()
-        vbox.addWidget(self.modelName)
-        vbox.addLayout(hbox)
-
-        self.saveAsDialog.setLayout(vbox)
-        self.saveAsDialog.show()
-
-    # save the model
-    def save(self):
-        print("save")
-        # code to save model somewhere?
+        hyperParamsSingleton = HyperParametersSingleton()
+        # Check if a file name was selected
+        if file_name:
+            saver.saveTorch(
+                file_name,
+                file_name,
+                hyperParamsSingleton.latestTrainedModelTrain,
+                hyperParamsSingleton.latestTrainedModelValidate,
+                hyperParamsSingleton.latestTrainedModelDnnName,
+                hyperParamsSingleton.latestTrainedModelBatchSize,
+                hyperParamsSingleton.latestTrainedModelEpoch,
+                hyperParamsSingleton.latestTrainedModel
+            )
+            print("Saved")
 
     def onContinueButton(self):
         pass
@@ -287,4 +278,19 @@ class TrainTab(QWidget, TabBaseAbstractClass):
     def updateProgressBar(self, value):
         print(value)
         self.progressBar.setValue(value)
+
+    def onTrainingFInish(self, status):
+        print("TrainUI finin")
+        self.showFinishedButtons()
+
+    def onCancelButton(self):
+        self.showFinishedButtons()
+        self.saveAsButton.setDisabled(True)
+        self.testModelButton.setDisabled(True)
+
+
+
+
+
+
 

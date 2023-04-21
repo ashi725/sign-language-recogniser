@@ -39,6 +39,7 @@ class FingerDataset(Dataset):
             self.transform = transforms.ToTensor()
 
 
+
     def addFingerImage(self, key: str, fingerImageClass):
         if (key not in self.labeledSet):
             # New label if it doesnt exist.
