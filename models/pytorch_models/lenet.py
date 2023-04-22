@@ -7,15 +7,18 @@ from torch.nn import ReLU
 from torch.nn import LogSoftmax
 from torch import flatten
 
-class Net(Module):
-    # The Net algoritm taken from here
-    # https://pyimagesearch.com/2021/07/19/pytorch-training-your-first-convolutional-neural-network-cnn/
+class LetNet(Module):
+    """
+    This class contains the a model for the LetNet
+    This code is heavily influenced from
+    https://pyimagesearch.com/2021/07/19/pytorch-training-your-first-convolutional-neural-network-cnn/
+    """
     def __init__(self):
-        numChannels = 1
-        classes = 25
+        numChannels = 1 # Total Channels
+        classes = 25 # Total Classes
 
         # call the parent constructor
-        super(Net, self).__init__()
+        super(LetNet, self).__init__()
         # initialize first set of CONV => RELU => POOL layers
         self.conv1 = Conv2d(in_channels=numChannels, out_channels=20,
                             kernel_size=(5, 5))
@@ -32,6 +35,7 @@ class Net(Module):
         # initialize our softmax classifier
         self.fc2 = Linear(in_features=500, out_features=classes)
         self.logSoftmax = LogSoftmax(dim=1)
+
 
     def forward(self, x):
         # pass the input through our first set of CONV => RELU =>

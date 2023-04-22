@@ -2,10 +2,10 @@ import sys
 
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
-from tabUI.datasetTabUI import DatasetTab
-from tabUI.trainTabUI import TrainTab
-from tabUI.testTabUI import TestTab
-from models.DataModelSingleton import DataModelSingleton
+from view.datasetTabUI import DatasetTab
+from view.trainTabUI import TrainTab
+from view.testTabUI import TestTab
+from models.singletons.DataModelSingleton import DataModelSingleton
 
 
 class MyApp(QWidget):

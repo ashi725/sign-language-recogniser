@@ -1,15 +1,20 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
-from models.DataModelSingleton import DataModelSingleton, convertIndexArrToAlphabetIndex
-from models.HyperParametersSingleton import HyperParametersSingleton
-from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
+from models.singletons.DataModelSingleton import DataModelSingleton, convertIndexArrToAlphabetIndex
+from models.singletons.HyperParametersSingleton import HyperParametersSingleton
+from view.components.SelectableLabel import SelectableLabel
 
 
 class ImageViewer(QWidget):
-
+    """
+    This class contains a widget to view images in the data singleton
+    It also provides functionality to select imgs
+    """
     def __init__(self):
         super().__init__()
+
+        # Init vars
         self.dataModel = DataModelSingleton()
         self.hyperParameters = HyperParametersSingleton()
         self.imageLabelList = []
@@ -95,7 +100,6 @@ class ImageViewer(QWidget):
         self.letterCol2CheckBoxes = [cbN, cbO, cbP, cbQ, cbR, cbS, cbT, cbU, cbV, cbW, cbX, cbY]
         self.letterCol2Stats = [nStat, oStat, pStat, qStat, rStat, sStat, tStat, uStat, vStat, wStat, xStat, yStat]
 
-
         # Left side Display checkboxes
         hboxLeft = QHBoxLayout()
         checkBoxGrid = QGridLayout()
@@ -167,6 +171,13 @@ class ImageViewer(QWidget):
         self.setLayout(vbox)
 
     def renderImages(self, datasetName, labelNumbersListArrForm):
+        """
+        Renders all images whose label is in the labelNumbersListArrForm arr.
+        The images are taken from inside the datasetName [Train, Test]
+        @param datasetName: [Train, test]
+        @param labelNumbersListArrForm: Array form classes to dispaly
+        @return:
+        """
         MAX_COLUMNS = 10
         rowIndex = 0
         columnIndex = 0
@@ -188,9 +199,12 @@ class ImageViewer(QWidget):
             fingerImageList = dataset.labeledSet[str(convertIndexArrToAlphabetIndex(labelArrFormNumber))]
 
             for fingerImage in fingerImageList:
+                # Load image details
                 imageLabel = SelectableLabel(fingerImage)
                 imageLabel.setPixmap(fingerImage.pixMap)
                 totalImagesCount += 1
+
+                # Render
                 self.imageGridLayout.addWidget(imageLabel, rowIndex, columnIndex)
                 self.imageLabelList.append(imageLabel)
                 # Grid pos algorithm
@@ -203,35 +217,54 @@ class ImageViewer(QWidget):
         self.numLettersLabel.setText("# Letters Displayed: {}".format(len(labelNumbersListArrForm)))
         self.numSelectedImagesLabel.setText("# Images Displayed: {}".format(totalImagesCount))
 
+
     def clearImages(self):
+        """
+        This method clears all image on the gridpane
+        """
         self.imageLabelList = []
         while self.imageGridLayout.count():
             child = self.imageGridLayout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
 
-    # This method generates a list of numbers according to labels of the checkbox
 
     def generateLabelNumberList(self):
+        """
+        This method returns a array containing the label class that are checked
+        @return: Array indices in alphabet form
+        """
         labelsToDisplay = [] # In alphabet index form
         counter = 0
+
+        # Go through col1 checkboxes
         for chkBox in self.letterCol1CheckBoxes:
             if chkBox.isChecked():
                 labelsToDisplay.append(counter)
             counter += 1
+
+        # Go through col2 chkboxes
         for chkBox in self.letterCol2CheckBoxes:
             if chkBox.isChecked():
                 labelsToDisplay.append(counter)
             counter += 1
+
         return labelsToDisplay
 
     def renderStats(self):
+        """
+        This method renders all the stats on the page
+        @return:
+        """
+
+        # Grab which dataset [Train,test]
         dataset = None
         if (self.trainButton.isChecked()):
             dataset = self.dataModel.trainDataset
         else:
             dataset = self.dataModel.testDataset
 
+        # Display header stats
         self.databaseNameLabel.setText("Database Name: {}".format(dataset.databaseName))
         self.numTotalImagesLabel.setText("Total # Images: {}".format(
             self.dataModel.testDataset.totalImages + self.dataModel.trainDataset.totalImages))
@@ -243,6 +276,7 @@ class ImageViewer(QWidget):
         for statLabel in self.letterCol1Stats:
             statLabel.setText(str(totalImagesArrayNumber[tempArrIndexCounter]))
             tempArrIndexCounter += 1
+
         # Col2 Stats
         for statLabel in self.letterCol2Stats:
             statLabel.setText(str(totalImagesArrayNumber[tempArrIndexCounter]))
@@ -263,6 +297,8 @@ class ImageViewer(QWidget):
     def onViewImagesButton(self):
         self.clearImages()
         datasetName = None
+
+        # Determine whether test/train dataset user wants to see
         if self.trainButton.isChecked() and not self.testButton.isChecked():
             datasetName = "train"
         elif not self.trainButton.isChecked() and self.testButton.isChecked():
@@ -270,32 +306,22 @@ class ImageViewer(QWidget):
         else:
             print("ERROR TRAIN/TEST RADIO NOT SELECTED")
             return
+        # Render imgs
         self.renderImages(datasetName, self.generateLabelNumberList())
 
     def onRadioButtonPress(self):
+        # Radio switching between test/train
         self.renderStats()
 
     def getSelectedImages(self):
+        """
+        Method that returns the selected images
+        @return: Arr containing ImageDetail() objects
+        """
         selectedImages = []
         for selectableLabel in self.imageLabelList:
+            # If selected, append
             if selectableLabel.is_selected():
                 selectedImages.append(selectableLabel.imageDetails)
         return selectedImages
 
-class SelectableLabel(QLabel):
-    def __init__(self, imageDetails, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._selected = False
-        self.imageDetails = imageDetails # Stores everything about the image
-        self.setAlignment(Qt.AlignCenter)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self._selected = not self._selected
-            if (self.is_selected()):
-                self.setStyleSheet("background-color: yellow; padding: 4px;")
-            else:
-                self.setStyleSheet("background-color: transparent; padding: 4px;")
-
-    def is_selected(self):
-        return self._selected

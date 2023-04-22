@@ -3,54 +3,82 @@ import pickle
 
 import torch
 
-from models.pytorch_models.NetModel import Net
+from models.pytorch_models.lenet import LetNet
 
 
 class SaveMechanism():
+    """
+    This class handles the saving and loading of pytorch models
+
+    """
     def __init__(self):
         pass
 
     def saveTorch(self, saveName, filePath, trainRatio, valRatio, dnnName, batchSize, epochNumber, torchModel):
+        """
+        Save a pytorch model
+        @param saveName: Name of the model
+        @param filePath: Path where the pt file is located
+        @param trainRatio: Ratio trained
+        @param valRatio: Validation ratio trained
+        @param dnnName: Name of the DNN
+        @param batchSize: Size of batch trained
+        @param epochNumber: Epoch trained
+        @param torchModel: The physical pytorch model as an object
+        @return:
+        """
         # Save the list to a file
         saves = []
-        saves.extend(self._loadAll())
+        saves.extend(self.loadAllMetadata())
 
+        # Save the model and metadata
         torch.save(torchModel.state_dict(), filePath)
-        saves.append(saveStructue(saveName, filePath, trainRatio, valRatio, dnnName, batchSize, epochNumber))
-
-
+        saves.append(SaveStructue(saveName, filePath, trainRatio, valRatio, dnnName, batchSize, epochNumber))
         with open("torchSaves.pickle", "wb") as f:
             pickle.dump(saves, f)
 
     def loadTorchData(self, saveName):
-        saves = self._loadAll()
+        """
+        This method loads the METADATA of the pytorch model
+        @param saveName: Name of pytorch to load
+        @return: A The pytorch metadata. It is a type SaveStructure
+        """
+        saves = self.loadAllMetadata()
         for save in saves:
             if save.saveName == saveName:
                 return save
         return None
 
     def loadTorchModel(self, saveName):
+        """
+        This method loads a pytorch MODEL and sets it to eval mode
+        @param saveName: Name of the model
+        @return: A pytorch model
+        """
         modelData = self.loadTorchData(saveName)
 
         modelType = None
 
-        # Create base model.
+       # Create the base model
         if modelData is not None:
             if modelData.dnnName == 'resnet':
                 print("not suppored")
             elif modelData.dnnName == 'lenet5':
-                modelType = Net()
+                modelType = LetNet()
             else:
                 print("ERR: NO model name found.")
                 raise Exception("No modelname found!")
 
-            # Load data into model
-
+            # Load data state into model
             modelType.load_state_dict(torch.load(modelData.filePath))
             modelType.eval()
         return modelType
 
-    def _loadAll(self):
+    def loadAllMetadata(self):
+        """
+        This method loads all pytorch metadata
+        @return: Returns list of saveStructre objects
+        """
         # Check if the file exists before loading the data
         if os.path.exists("torchSaves.pickle"):
             with open("torchSaves.pickle", "rb") as f:
@@ -59,7 +87,10 @@ class SaveMechanism():
             # Handle the case where the file does not exist
             return []
 
-class saveStructue:
+class SaveStructue:
+    """
+    This class is a model of the data that is saved in the pickle
+    """
     def __init__(self, saveName, filePath, trainRatio, valRatio, dnnName, batchSize, epochNumber):
         self.saveName = saveName
         self.filePath = filePath

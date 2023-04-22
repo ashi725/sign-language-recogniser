@@ -1,19 +1,20 @@
-import argparse
-import threading
-
 import numpy as np
 import torch
-import cv2
 import torch.nn.functional as F
 
-# https://pyimagesearch.com/2021/07/19/pytorch-training-your-first-convolutional-neural-network-cnn/
 from PyQt5.QtCore import QThread, pyqtSignal
 from torch.utils.data import DataLoader
 
-from models.PredictDataSingleton import PredictDataSingleton, ImagePrediction
+from models.singletons.PredictDataSingleton import ImagePrediction
 
 
 class PredicterRunnerThread(QThread):
+    """
+    This class runs a prediction based on the data stored in the prediction singleton
+    The code is heavily reliant on the link below
+    https://pyimagesearch.com/2021/07/19/pytorch-training-your-first-convolutional-neural-network-cnn/
+    """
+    # Flag to indicate finish predicting
     predictionFinished= pyqtSignal(int)
 
     def __init__(self, predictionSingleton):
@@ -21,6 +22,7 @@ class PredicterRunnerThread(QThread):
         self.predictionSingleton = predictionSingleton
 
     def run(self):
+        # Load device
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Load predict dataset
@@ -61,6 +63,7 @@ class PredicterRunnerThread(QThread):
             all_probs = probs.detach()[0].cpu().numpy()
             print("Probability distribution over all classes: ", all_probs)
 
+            # Store predictions into memory
             self.predictionSingleton.imagePredictionList.append(
                 ImagePrediction(origImage, idx, prob, all_probs, actualLabel)
             )

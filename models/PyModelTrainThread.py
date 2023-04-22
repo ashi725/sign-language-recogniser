@@ -1,46 +1,40 @@
 import threading
-
-import numpy as np
-import torch
-from PyQt5.QtCore import QThread, pyqtSignal
-
-
-# import the necessary packages
-from torch.utils.data import random_split
-from torch.utils.data import DataLoader
-from torchvision.transforms import ToTensor
-from torchvision.datasets import KMNIST
-from torch.optim import Adam
-from torch import nn
-import matplotlib.pyplot as plt
-import numpy as np
-import argparse
-import torch
 import time
 
-from torch import cuda, nn, optim
-from torch.utils import data
-from torchvision import datasets, transforms
+import torch
 import torchvision.models as models
-import torch.nn.functional as F
-import time
+from PyQt5.QtCore import QThread, pyqtSignal
+from torch import cuda, nn
+from torch.optim import Adam
+from torch.utils import data
 
-from models.pytorch_models.NetModel import Net
-from models.pytorch_models.lenet5 import LeNet5
+from models.pytorch_models.lenet import LetNet
 
 
-class ModelTrainerThread(QThread):
+class PyModelTrainThread(QThread):
+    """
+    This class contains all logic to run the PYTORCH Training
+
+    It contains ability to
+     - start/stop training
+     - Send updates via PYQT Signals
+     - Save the trained model into MEMORY once finished. (HyperParametersSingleton)
+
+    """
+    # Signals to relay to parent whats happening
     progressBarChanged = pyqtSignal(int)
     statusUpdate = pyqtSignal(str)
     finishStatus = pyqtSignal(int) # Emit -1 for failure. Emit 0 for pass
 
     def __init__(self, hyperParametersSingleton, dataModelSingleton):
         super().__init__()
-        self.stopFlag = threading.Event()
-        self.shouldSaveFlag = threading.Event()
+
+        # Store other important vars
+        self.stopFlag = threading.Event() # Flag to determine whether to stop training
         self.hyperParametersSingleton = hyperParametersSingleton
         self.dataModelSingleton = dataModelSingleton
 
+        # Store reference to model training data
         self.model = None
         self.train_loader = None
         self.test_loader = None
@@ -50,9 +44,15 @@ class ModelTrainerThread(QThread):
         self.lossFn = None
 
     def run(self):
+        """
+        This method starts training a model
+        """
+
+        # Determine training settings
         batch_size = self.hyperParametersSingleton.batchsize
         self.device = 'cuda' if cuda.is_available() else 'cpu'
 
+        # Grab Dataset information user loaded
         train_dataset = self._loadTrainDataset()
         test_dataset = self._loadTestDataset()
 
@@ -97,15 +97,12 @@ class ModelTrainerThread(QThread):
             self.hyperParametersSingleton.latestTrainedModelEpoch = self.hyperParametersSingleton.epochs
             self.finishStatus.emit("0") # Tell finish normally
 
-    # Calculate the accuracy
-    # Out is the actual output. labels is real.
-    def accuracy(self, out, labels):
-        _, pred = torch.max(out, dim=1)
-        return torch.sum(pred == labels).item()
-
-    #  https://pyimagesearch.com/2021/07/19/pytorch-training-your-first-convolutional-neural-network-cnn/
-    # This algorithm is heavily reliant on the code supplied from above.
     def start_training_and_testing(self):
+        """
+        This method starts the training and testing process for a model.
+        The code is heavily taken from
+        https://pyimagesearch.com/2021/07/19/pytorch-training-your-first-convolutional-neural-network-cnn/
+        """
 
         # measure how long training is going to take
         print("[INFO] training the network...")
@@ -123,7 +120,6 @@ class ModelTrainerThread(QThread):
         # TRAINING #
         ############
         # loop over our epochs
-
         for e in range(0, self.hyperParametersSingleton.epochs):
             if (self.stopFlag.is_set()):
                     return
@@ -173,6 +169,7 @@ class ModelTrainerThread(QThread):
         print("[INFO] Finished Training. Start Evaluation. Please Wait")
         self.statusUpdate.emit('Finished Training. Evaluating')
         self.progressBarChanged.emit(100)
+
         ##############
         # Evaluation #
         #############
@@ -221,28 +218,36 @@ class ModelTrainerThread(QThread):
         self.statusUpdate.emit("{}{}{}{}".format(statOne, statTwo, statThree, statFour))
 
     def stop(self):
+        """
+        Method to tell thread to stop training.
+        @return:
+        """
         self.stopFlag.set()
 
     def cleanup_stop(self):
-            print("Okay I stopped. Cleanup unfinished work!")
-            self.statusUpdate.emit("Okay I stopped. Cleanup unfinished work!")
-            self.finishStatus.emit("-1")
-            # Todo make sure data is cleaned up
-
-    def saveModel(self, filePath):
-        print("Saving yes!")
-        self.shouldSaveFlag.set()
+        """
+        Method that is automatically called once the thread is ready to stop.
+        @return:
+        """
+        print("Okay I stopped. Cleanup unfinished work!")
+        self.statusUpdate.emit("Okay I stopped. Cleanup unfinished work!")
+        self.finishStatus.emit("-1")
 
     def _determine_pytorch_model(self):
+        """
+        This method determines what pytorch model to use [Letnet, resnet]
+        @return: The model class
+        """
         if self.hyperParametersSingleton.modelName == 'resnet':
-            resnet = models.resnet18(weights = None) # Load ResNet model architecture
-            # Replace first convolutional layer and fully connected layer
-            resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-            resnet.fc = nn.Linear(512, 10)
+            print("unsupported")
+            raise Exception("Resnet loaded but not supported")
+            # resnet = models.resnet18(weights = None) # Load ResNet model architecture
+            # # Replace first convolutional layer and fully connected layer
+            # resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+            # resnet.fc = nn.Linear(512, 10)
 
         elif self.hyperParametersSingleton.modelName == 'lenet5':
-            return Net()
-        # resnet = models.resnet18(weights = None) # Load ResNet model architecture
+            return LetNet()
         else:
             print("ERR: NO model name found.")
             raise Exception("No modelname found!")

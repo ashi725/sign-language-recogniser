@@ -1,164 +1,23 @@
+import csv
 import threading
 import time
 
 import numpy as np
 from PIL import Image
 from PIL.ImageQt import ImageQt
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import *
-import csv
 
-from models.DataModelSingleton import DataModelSingleton, FingerDataset, FingerImage
-from models.HyperParametersSingleton import HyperParametersSingleton
-from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
+from models.singletons.DataModelSingleton import FingerDataset, FingerImage
 
-
-class DatasetTab(QWidget,TabBaseAbstractClass):
-    def refreshWindowOnLoad(self):
-        pass
-
-    def __init__(self, disableTrainTabFunc):
-
-        # Init variables
-        super().__init__()
-        vbox = QVBoxLayout()
-        self.dataModel = DataModelSingleton()
-        self.hyperParameters = HyperParametersSingleton()
-        self.downloadThreadInstance = None
-        self.disableTrainTabFunc = disableTrainTabFunc
-
-        # Import Button
-        importDatasetButton = QPushButton('Import dataset')
-        importDatasetButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        importDatasetButton.setStyleSheet("font-size: 20px; padding: 10px;")
-        importDatasetButton.clicked.connect(self.show_dialog)
-        vbox.setAlignment(Qt.AlignHCenter)
-        vbox.addWidget(importDatasetButton)
-        vbox.addStretch()
-        self.setLayout(vbox)
-    
-    def show_dialog(self):
-        dialog = QDialog(self)   
-        dialog.setModal(True)
-        dialog.setWindowTitle('Import dataset')
-        dialog.setWindowFlags(dialog.windowFlags() & ~Qt.WindowCloseButtonHint)
-        dialog.setFixedWidth(400)
-        self.dropdown = QComboBox(dialog)
-        self.dropdown.addItems(['Not selected', 'MNIST', 'Custom'])
-        self.dropdown.currentIndexChanged.connect(self.dropdown_changed)
-
-        # Error Label
-        self.errorLabel = QLabel("")
-        self.errorLabel.setStyleSheet("color: red;")
-
-        # Download/Stop Button
-        self.downloadButton = QPushButton("Download")
-        self.downloadButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.stopButton = QPushButton("Stop")
-        self.stopButton.setDisabled(True)
-
-        # Cancel Button
-        self.cancelButton = QPushButton("Cancel")
-        self.cancelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.cancelButton.clicked.connect(dialog.reject)
-
-        # Progress Widgets
-        self.progressBar = QProgressBar()
-        self.progressPercentage = QLabel("")
-        self.progressPercentage.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.progressPercentage.setStyleSheet("padding: 0px; margin: 0px;")
-        self.downloadStatusLabel = QLabel("")
-
-        # Layout settings
-        vbox = QVBoxLayout()
-        vbox.setAlignment(Qt.AlignHCenter)
-
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.dropdown)
-        hbox.addWidget(self.downloadButton)
-        hbox.addWidget(self.stopButton)
-
-        vbox.addLayout(hbox)
-        vbox.addWidget(self.errorLabel)
-
-        hbox1 = QHBoxLayout()
-        hbox1.addWidget(self.progressBar)
-        hbox1.addWidget(self.progressPercentage)
-        hbox1.addWidget(self.downloadStatusLabel)
-        vbox.addLayout(hbox1)
-
-        hbox2 = QHBoxLayout()
-        hbox2.addStretch()
-        hbox2.addWidget(self.cancelButton)
-        vbox.addLayout(hbox2)
-
-        dialog.setLayout(vbox)
-
-        # Event Binders
-        self.downloadButton.clicked.connect(lambda: self.onDownloadDatabase(self.dropdown.currentText()))
-        self.stopButton.clicked.connect(self.onStopDownloadButton)
-
-        dialog.show()    
-
-    def dropdown_changed(self):
-        self.hyperParameters.dataset = self.dropdown.currentText() 
-        print("drop down changed to " + self.dropdown.currentText() )
-    
-    def onDownloadDatabase(self, selectedDatabase):
-
-        # Disable buttons
-        self.downloadButton.setDisabled(True)
-        self.stopButton.setDisabled(False)
-        self.cancelButton.setDisabled(True)
-
-        # Create new download thread.
-        if (self.downloadThreadInstance != None):
-            self.downloadThreadInstance.stop()
-            self.downloadThreadInstance = None
-
-        self.downloadThreadInstance = DownloadThread(selectedDatabase, self.dataModel)
-
-        # Attach signal listeners
-        self.downloadThreadInstance.progressBarChanged.connect(self.updateProgressBar)
-        self.downloadThreadInstance.timerStringChanged.connect(self.updateTimerLabel)
-        self.downloadThreadInstance.downloadStatusLabelChanged.connect(self.updateDownloadStatusLabel)
-        self.downloadThreadInstance.errorLabelChanged.connect(self.updateErrorLabel)
-        self.downloadThreadInstance.finishDownloadingFlag.connect(self.onDownloadFinish)
-
-        self.downloadThreadInstance.start()
-
-    def onStopDownloadButton(self):
-        self.downloadThreadInstance.stop()
-
-    # Component update methods 
-    def updateProgressBar(self, progressBarValue):
-        self.progressBar.setValue(progressBarValue)
-
-    def updateTimerLabel(self, labelText):
-        self.progressPercentage.setText(labelText)
-
-    def updateDownloadStatusLabel(self, labelText):
-        self.downloadStatusLabel.setText(labelText)
-
-    def updateErrorLabel(self, labelText):
-        self.errorLabel.setText(labelText)
-
-    def onDownloadFinish(self, data):
-        self.downloadButton.setDisabled(False)
-        self.stopButton.setDisabled(True)
-        self.cancelButton.setDisabled(False)
-
-        # If data = 0 then download successful. Redirect to different tab
-        if data == 0:
-            self.disableTrainTabFunc(True)
-            self.redirectNextTab()
-
-    def redirectNextTab(self):
-        print("Redirect")
-        # todo
 
 class DownloadThread(QThread):
+    """
+    This contains a thread to download a CSV file and load it into memory.
+    It also sends data back to parent via signals
+    """
+    # Signals
     progressBarChanged = pyqtSignal(int)
     timerStringChanged = pyqtSignal(str)
     downloadStatusLabelChanged = pyqtSignal(str)
@@ -173,6 +32,7 @@ class DownloadThread(QThread):
         self.noDatabaseSelectedEdgeCase = False
 
     def run(self):
+        # Download database
         while not self.stopFlag.is_set():
             self.downloadDatabase()
             break
@@ -193,6 +53,10 @@ class DownloadThread(QThread):
         self.stopFlag.set()
 
     def stopCleanup(self):
+        """
+        This method is automatically called when the download is stopped.
+        It allows cleanup of half loaded data
+        """
         self.dataModelReference.testDataset = None
         self.dataModelReference.trainDataset = None
         self.progressBarChanged.emit(0)
@@ -201,12 +65,19 @@ class DownloadThread(QThread):
         self.downloadStatusLabelChanged.emit("Download Cancelled. Data cleared.")
 
     def downloadDatabase(self):
+        """
+        This method downloads the database and loads into memory
+        """
         if self.selectedDatabase == "MNIST":
+            # MNIST CSV file
             self.errorLabelChanged.emit("")
 
+            # Download Train
             self.downloadStatusLabelChanged.emit("Downloading Test Set (1/2)")
             mnistTest = self.loadCsv(r'resources\sign_mnist_test.csv')
             mnistTest.databaseName = "Test_MNIST"
+
+            # Download Test
             self.downloadStatusLabelChanged.emit("Downloading Train Set (2/2)")
             mnistTrain = self.loadCsv(r'resources\sign_mnist_train.csv')
             mnistTrain.databaseName = "Train_MNIST"
@@ -217,6 +88,7 @@ class DownloadThread(QThread):
             self.dataModelReference.trainDataset = mnistTrain
 
         elif self.selectedDatabase == "Custom":
+            # Custom CSV file. Get users file paths
             testFilePath, tempVar = QFileDialog.getOpenFileName(None, "Select Test CSV file", "", "CSV (*.csv)")
             trainFilePath, tempVar = QFileDialog.getOpenFileName(None, "Select Train CSV file", "", "CSV (*.csv)")
 
@@ -226,10 +98,12 @@ class DownloadThread(QThread):
                 self.noDatabaseSelectedEdgeCase = True
                 return
 
-            # Download datasets
+            # Download test csv set
             self.downloadStatusLabelChanged.emit("Downloading Test Set (1/2)")
             mnistTest = self.loadCsv(testFilePath)
             mnistTest.databaseName = "Test_Custom"
+
+            # Download train csv set
             self.downloadStatusLabelChanged.emit("Downloading Train Set (2/2)")
             mnistTrain = self.loadCsv(trainFilePath)
             mnistTrain.databaseName = "Train_Custom"
@@ -240,10 +114,15 @@ class DownloadThread(QThread):
             self.dataModelReference.trainDataset = mnistTrain
 
         else:
+            # No db set
             self.errorLabelChanged.emit("Please select a database")
             self.noDatabaseSelectedEdgeCase = True
 
     def loadCsv(self, csvLocation):
+        """
+        This method loads the CSV and puts it into memory (Singleton)
+        @param csvLocation: File path
+        """
         dataset = FingerDataset() # Store loaded data into this data class
 
         # Check if stop flag set
@@ -298,7 +177,11 @@ class DownloadThread(QThread):
         return dataset
 
     def calculateTimeLeft(self, currentRow, totalRows, averageTimePerRow):
-            rowsLeft = totalRows-currentRow
-            timeSeconds = rowsLeft * averageTimePerRow
-            return int(timeSeconds)
+        """
+        Algorithm to determine how much time left.
+        @return: Seconds left
+        """
+        rowsLeft = totalRows-currentRow
+        timeSeconds = rowsLeft * averageTimePerRow
+        return int(timeSeconds)
 

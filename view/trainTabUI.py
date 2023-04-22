@@ -1,25 +1,26 @@
-import os
-from subprocess import Popen
-import subprocess
-from PyQt5.QtCore import Qt, QFileInfo
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
-from models.DataModelSingleton import DataModelSingleton
-from models.HyperParametersSingleton import HyperParametersSingleton
-from models.ModelRunnerThread import ModelTrainerThread
+from models.singletons.DataModelSingleton import DataModelSingleton
+from models.singletons.HyperParametersSingleton import HyperParametersSingleton
+from models.PyModelTrainThread import PyModelTrainThread
 from models.save_mechanism.ModelSaver import SaveMechanism
-from tabUI.ImageViewer import ImageViewer
-from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
+from view.components.ImageViewer import ImageViewer
+from view.TabBaseAbstractClass import TabBaseAbstractClass
 
 
 
 class TrainTab(QWidget, TabBaseAbstractClass):
-
+    """
+    This is the main tab for training a model
+    """
     # Method called whenever this tab is viewed.
     def refreshWindowOnLoad(self):
+        # Render the stats for image dispaly
         self.imgView.renderStats()
 
     def __init__(self):
+        # init vars
         super().__init__()
         self.dataModel = DataModelSingleton()
         self.hyperParameters = HyperParametersSingleton()
@@ -35,10 +36,15 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         # Continue Button
         continueButton = QPushButton("Continue")
         continueButton.setStyleSheet("font-size: 16px")
-        continueButton.clicked.connect(self.show_dialog)
+        continueButton.clicked.connect(self.show_train_dialogue_settings)
         gridLayout.addWidget(continueButton, 1, 0)
 
-    def show_dialog(self):
+    def show_train_dialogue_settings(self):
+        """
+        This method is called on train button. It opens a dialgoue for training
+        @return:
+        """
+        # Dialogue settings
         self.dialog = QDialog(self)   
         self.dialog.setWindowTitle("Training Model")
         self.dialog.resize(400, 300)   
@@ -108,6 +114,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         # Update parameters in singleton
         self.slider.valueChanged.connect(self.change_slider)
 
+        # Layout settings
         vboxTrain.addWidget(trainLabel)
         vboxTrain.addWidget(self.spinboxTrain)
         hboxSplitter.addLayout(vboxTrain)
@@ -123,7 +130,8 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         trainModelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         trainModelButton.clicked.connect(self.on_train_model_button)
         trainModelButton.clicked.connect(self.dialog.reject)
-        
+
+        # Layout settings
         vbox = QVBoxLayout()
         vbox.addLayout(hboxModel)
         vbox.addLayout(hboxBatchsize)
@@ -144,36 +152,45 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.change_spinboxEpochNum()
         self.change_slider()
 
+        # Layout settings
         self.dialog.setLayout(vboxAll)
         self.dialog.show()
-        
 
 
     def show_train_dialog(self):
+        """
+        This method is the training process dialogue
+        """
 
+        # Attach signal listeners
         print("training model...")
-        self.modelTrainerRunner = ModelTrainerThread(self.hyperParameters, self.dataModel)
+        self.modelTrainerRunner = PyModelTrainThread(self.hyperParameters, self.dataModel)
         self.modelTrainerRunner.start()
         self.modelTrainerRunner.statusUpdate.connect(self.updateTrainingDataText)
         self.modelTrainerRunner.progressBarChanged.connect(self.updateProgressBar)
         self.modelTrainerRunner.finishStatus.connect(self.onTrainingFInish)
 
+        # Dialogue settings
         self.trainDialog = QDialog(self)
-        self.trainDialog.setWindowTitle(self.hyperParameters.dataset + "[numimages" + "1" +"]")
+        self.trainDialog.setWindowTitle("Training model")
         self.trainDialog.resize(400, 300)
         self.trainDialog.setModal(True)
-        
+
+        # Layout settings
         vbox = QVBoxLayout()
         hboxInfo = QHBoxLayout()
         vboxHyperparameters = QVBoxLayout()
         vboxHyperparameters.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
+        # Labels
         cnnLabel = QLabel("CNN Name: " + self.hyperParameters.modelName)
         batchsizeLabel = QLabel("Batch Size: " + str(self.hyperParameters.batchsize))
         epochNumLabel = QLabel("Epoch Number: " + str(self.hyperParameters.epochs))
         trainLabel = QLabel("Train Set Size: " + str(self.hyperParameters.train))
         validationLabel = QLabel("Validation Set Size: " + str(self.hyperParameters.validation))
         testLabel = QLabel("Test Set Size: " + str(self.hyperParameters.test))
+
+        # Dialogue
         vboxHyperparameters.addWidget(cnnLabel)
         vboxHyperparameters.addWidget(batchsizeLabel)
         vboxHyperparameters.addWidget(epochNumLabel)
@@ -249,16 +266,23 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.trainNewModelButton.setVisible(True)
         self.saveAsButton.setVisible(True)
         self.modelTrainerRunner.stop()
-
+    
     # Dialog to save model
     def onSaveButton(self):
+        """
+        This method is called on save.
+        It allows saving of the model
+        @return:
+        """
         # Show the save dialog
         file_name, _ = QFileDialog.getSaveFileName(None, "Save File", "", "Pytorch Model (*.pt);;All Files (*)")
         saver = SaveMechanism()
 
         hyperParamsSingleton = HyperParametersSingleton()
+
         # Check if a file name was selected
         if file_name:
+            # save model into disc
             saver.saveTorch(
                 file_name,
                 file_name,
@@ -270,9 +294,6 @@ class TrainTab(QWidget, TabBaseAbstractClass):
                 hyperParamsSingleton.latestTrainedModel
             )
             print("Saved")
-
-    def onContinueButton(self):
-        pass
 
     def on_train_model_button(self):
         self.show_train_dialog()

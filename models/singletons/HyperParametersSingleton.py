@@ -1,7 +1,8 @@
-
-
 class HyperParametersSingleton:
-
+    """
+    This class is a singleton
+    It contains all the information about training a model
+    """
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(HyperParametersSingleton, cls).__new__(cls)
@@ -9,12 +10,12 @@ class HyperParametersSingleton:
     
     # Details and hyperparameters used for model.
     dataset = None
-    modelName = "lenet5"
-    batchsize = 100
-    epochs = 2
-    train = 50
-    validation = 50
-    test = 0
+    modelName = None
+    batchsize = None
+    epochs = None
+    train = None
+    validation = None
+    test = None
 
     # Latest model settings
     latestTrainedModel = None
