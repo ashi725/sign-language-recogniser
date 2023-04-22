@@ -115,14 +115,16 @@ class TestTab(QWidget, TabBaseAbstractClass):
         dialog = QDialog(self)
         dialog.setWindowTitle('Choose ML Model')
         dialog.setModal(True)
+        dialog.setMinimumSize(900, 250)
+        dialog.setMaximumSize(900, 600)
         dialog.show()
 
         # Layout
-        vbox = QVBoxLayout()
-        dialog.setLayout(vbox)
+        vbox = QVBoxLayout(dialog)
+        vbox.setContentsMargins(20, 20, 20, 20)
 
         # Header
-        infoLablel = QLabel("Select saved models")
+        infoLablel = QLabel("Choose a saved model")
         vbox.addWidget(infoLablel)
 
         # Load saved models
@@ -141,12 +143,12 @@ class TestTab(QWidget, TabBaseAbstractClass):
             pyTorchSaveRadios.append(radio)
 
             # Show stat
-            statString = "Train/Val Ratio(%): {}|{}\tbatchSize: {}\tEpoch: {}\tDNN: {:<15s}".format(
-                pyTorchSaves[index].trainRatio,
-                pyTorchSaves[index].valRatio,
+            statString = "[CNN: {}]\t[Batch Size: {}]\t[Epoch: {}]\t[Train/Val Ratio(%): {}|{}]".format(
+                pyTorchSaves[index].cnnName,
                 pyTorchSaves[index].batchSize,
                 pyTorchSaves[index].epochNumber,
-                pyTorchSaves[index].dnnName,
+                pyTorchSaves[index].trainRatio,
+                pyTorchSaves[index].valRatio,
             )
 
             # Layout
@@ -165,11 +167,11 @@ class TestTab(QWidget, TabBaseAbstractClass):
                 pyTorchData = saver.loadTorchData(saveLocation)
                 pyTorchModel = saver.loadTorchModel(saveLocation)
 
-                # Load into sigleton memory
+                # Load into singleton memory
                 self.predictionData.TrainedModel = pyTorchModel
                 self.predictionData.latestTrainedModelTrain = pyTorchData.trainRatio
                 self.predictionData.latestTrainedModelValidate = pyTorchData.valRatio
-                self.predictionData.latestTrainedModelDnnName = pyTorchData.dnnName
+                self.predictionData.latestTrainedModelCnnName = pyTorchData.cnnName
                 self.predictionData.latestTrainedModelBatchSize = pyTorchData.batchSize
                 self.predictionData.latestTrainedModelEpoch = pyTorchData.epochNumber
                 self.predictButton.setDisabled(False)
@@ -177,7 +179,7 @@ class TestTab(QWidget, TabBaseAbstractClass):
                 # Update main tab stat
                 self.modelPathLabel.setText("{}{}".format("Loaded Model: ", saveLocation))
                 self.valTrainRatio.setText("{}{}|{}".format("Train/Val Ratio: ", pyTorchData.trainRatio,  pyTorchData.valRatio))
-                self.cnnLabel.setText("{}{}".format("Loaded CNN Name: ",pyTorchData.dnnName ))
+                self.cnnLabel.setText("{}{}".format("Loaded CNN Name: ",pyTorchData.cnnName ))
                 self.batchsizeLabel.setText("{}{}".format("Batch Size: ", pyTorchData.batchSize))
                 self.epochNumLabel.setText("{}{}".format("Epoch Number: ", pyTorchData.epochNumber))
 
@@ -185,8 +187,10 @@ class TestTab(QWidget, TabBaseAbstractClass):
 
         # Layout settings
         chooseModelButton = QPushButton("Select")
+        chooseModelButton.setFixedWidth(100)
         chooseModelButton.clicked.connect(onChooseModelButton)
         vbox.addWidget(chooseModelButton)
+
 
 
     def on_show_dataset_Button(self):

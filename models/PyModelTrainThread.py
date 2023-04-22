@@ -8,8 +8,8 @@ from torch import cuda, nn
 from torch.optim import Adam
 from torch.utils import data
 
-from models.pytorch_models.lenet import LetNet
-from models.pytorch_models.resnet import Resnet
+from models.pytorch_models.LeNet5 import LetNet5
+from models.pytorch_models.ResNet import ResNet
 
 
 class PyModelTrainThread(QThread):
@@ -74,10 +74,10 @@ class PyModelTrainThread(QThread):
         self.model = self.model.to(self.device) # Move to GPU if supported
 
         # Loss function (cross-entropy) and optimizer with learning rate and momentum. CrossEntropyLoss
-        if self.hyperParametersSingleton.modelName == 'resnet':
+        if self.hyperParametersSingleton.modelName == 'ResNet':
             self.lossFn = nn.CrossEntropyLoss()
             self.opt = Adam(self.model.parameters(), lr=1e-3)
-        elif self.hyperParametersSingleton.modelName == 'lenet5':
+        elif self.hyperParametersSingleton.modelName == 'LeNet5':
             self.lossFn = nn.NLLLoss()
             self.opt = Adam(self.model.parameters(), lr=1e-3)
 
@@ -93,7 +93,7 @@ class PyModelTrainThread(QThread):
             self.hyperParametersSingleton.latestTrainedModel = self.model
             self.hyperParametersSingleton.latestTrainedModelTrain = self.hyperParametersSingleton.train
             self.hyperParametersSingleton.latestTrainedModelValidate = self.hyperParametersSingleton.validation
-            self.hyperParametersSingleton.latestTrainedModelDnnName = self.hyperParametersSingleton.modelName
+            self.hyperParametersSingleton.latestTrainedModelCnnName = self.hyperParametersSingleton.modelName
             self.hyperParametersSingleton.latestTrainedModelBatchSize = self.hyperParametersSingleton.batchsize
             self.hyperParametersSingleton.latestTrainedModelEpoch = self.hyperParametersSingleton.epochs
             self.finishStatus.emit("0") # Tell finish normally
@@ -236,13 +236,13 @@ class PyModelTrainThread(QThread):
 
     def _determine_pytorch_model(self):
         """
-        This method determines what pytorch model to use [Letnet, resnet]
+        This method determines what pytorch model to use [LetNet5, ResNet]
         @return: The model class
         """
-        if self.hyperParametersSingleton.modelName == 'resnet':
-            return Resnet()
-        elif self.hyperParametersSingleton.modelName == 'lenet5':
-            return LetNet()
+        if self.hyperParametersSingleton.modelName == 'ResNet':
+            return ResNet()
+        elif self.hyperParametersSingleton.modelName == 'LeNet5':
+            return LetNet5()
         else:
             print("ERR: NO model name found.")
             raise Exception("No modelname found!")

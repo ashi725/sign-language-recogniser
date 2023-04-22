@@ -53,7 +53,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         hboxModel = QHBoxLayout()
         modelLabel = QLabel("Model: ")
         self.modelDropdown = QComboBox()
-        self.modelDropdown.addItems(["lenet5", "resnet"])
+        self.modelDropdown.addItems(["LeNet5", "ResNet"])
         self.modelDropdown.setCurrentIndex(0)
         self.modelDropdown.currentTextChanged.connect(self.change_modelDropdown)
         hboxModel.addWidget(modelLabel)
@@ -195,7 +195,6 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         vboxHyperparameters.addWidget(epochNumLabel)
         vboxHyperparameters.addWidget(trainLabel)
         vboxHyperparameters.addWidget(validationLabel)
-        vboxHyperparameters.addWidget(testLabel)
 
         # Training progress data
         self.trainingData = QTextEdit()
@@ -287,7 +286,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
                 file_name,
                 hyperParamsSingleton.latestTrainedModelTrain,
                 hyperParamsSingleton.latestTrainedModelValidate,
-                hyperParamsSingleton.latestTrainedModelDnnName,
+                hyperParamsSingleton.latestTrainedModelCnnName,
                 hyperParamsSingleton.latestTrainedModelBatchSize,
                 hyperParamsSingleton.latestTrainedModelEpoch,
                 hyperParamsSingleton.latestTrainedModel

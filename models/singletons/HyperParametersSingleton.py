@@ -21,7 +21,7 @@ class HyperParametersSingleton:
     latestTrainedModel = None
     latestTrainedModelTrain = None
     latestTrainedModelValidate = None
-    latestTrainedModelDnnName = None
+    latestTrainedModelCnnName = None
     latestTrainedModelBatchSize = None
     latestTrainedModelEpoch = None
 

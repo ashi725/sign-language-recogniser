@@ -1,5 +1,6 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QPixmap, QFont
 
 from models.singletons.DataModelSingleton import DataModelSingleton
 from models.singletons.HyperParametersSingleton import HyperParametersSingleton
@@ -15,26 +16,46 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
         pass
 
     def __init__(self, disableTrainTabFunc):
-        """
-        @param disableTrainTabFunc: Method referenceto disable the train tab.
-        """
-        # Init variables
         super().__init__()
-        vbox = QVBoxLayout()
+
+        # Init variables
         self.dataModel = DataModelSingleton()
         self.hyperParameters = HyperParametersSingleton()
         self.downloadThreadInstance = None
         self.disableTrainTabFunc = disableTrainTabFunc
+
+        # Logo
+        self.imageLabel = QLabel(self)
+        pixmap = QPixmap("resources/logo.png")
+        scaled_pixmap = pixmap.scaled(300, 300)
+        self.imageLabel.setPixmap(scaled_pixmap)
+
+        # Title
+        titleLabel = QLabel("Sign Language Recogniser")
+        titleLabel.setStyleSheet("font-size: 30px; font-weight: bold; padding: 30px;")
 
         # Import Button
         importDatasetButton = QPushButton('Import dataset')
         importDatasetButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         importDatasetButton.setStyleSheet("font-size: 20px; padding: 10px;")
         importDatasetButton.clicked.connect(self.showImportDialog)
-        vbox.setAlignment(Qt.AlignHCenter)
-        vbox.addWidget(importDatasetButton)
+
+        # Vertical layout
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.imageLabel, alignment=Qt.AlignCenter)
+        vbox.addWidget(titleLabel, alignment=Qt.AlignCenter)
+        vbox.addWidget(importDatasetButton, alignment=Qt.AlignCenter)
         vbox.addStretch()
-        self.setLayout(vbox)
+
+        # Horizontal layout
+        hbox = QHBoxLayout()
+        hbox.addStretch()
+        hbox.addLayout(vbox)
+        hbox.addStretch()
+
+        # Set layout
+        self.setLayout(hbox)
+
     
     def showImportDialog(self):
         """
@@ -47,10 +68,11 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
         dialog.setModal(True)
         dialog.setWindowTitle('Import dataset')
         dialog.setWindowFlags(dialog.windowFlags() & ~Qt.WindowCloseButtonHint)
-        dialog.setFixedWidth(400)
+        dialog.setFixedSize(600, 200)
 
         # Dropdown for datatype
         self.dropdown = QComboBox(dialog)
+        self.dropdown.setFixedWidth(200)
         self.dropdown.addItems(['Not selected', 'MNIST', 'Custom'])
         self.dropdown.currentIndexChanged.connect(self.dropdown_changed)
 
@@ -62,6 +84,7 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
         self.downloadButton = QPushButton("Download")
         self.downloadButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.stopButton = QPushButton("Stop")
+        self.stopButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.stopButton.setDisabled(True)
 
         # Cancel Button
@@ -71,6 +94,7 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
 
         # Progress Widgets
         self.progressBar = QProgressBar()
+        self.progressBar.setFixedSize(200, 20)
         self.progressPercentage = QLabel("")
         self.progressPercentage.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.progressPercentage.setStyleSheet("padding: 0px; margin: 0px;")

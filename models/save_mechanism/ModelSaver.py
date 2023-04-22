@@ -3,8 +3,8 @@ import pickle
 
 import torch
 
-from models.pytorch_models.lenet import LetNet
-from models.pytorch_models.resnet import Resnet
+from models.pytorch_models.LeNet5 import LetNet5
+from models.pytorch_models.ResNet import ResNet
 import torchvision.models as models
 
 import torch
@@ -21,14 +21,14 @@ class SaveMechanism():
     def __init__(self):
         pass
 
-    def saveTorch(self, saveName, filePath, trainRatio, valRatio, dnnName, batchSize, epochNumber, torchModel):
+    def saveTorch(self, saveName, filePath, trainRatio, valRatio, cnnName, batchSize, epochNumber, torchModel):
         """
         Save a pytorch model
         @param saveName: Name of the model
         @param filePath: Path where the pt file is located
         @param trainRatio: Ratio trained
         @param valRatio: Validation ratio trained
-        @param dnnName: Name of the DNN
+        @param cnnName: Name of the CNN
         @param batchSize: Size of batch trained
         @param epochNumber: Epoch trained
         @param torchModel: The physical pytorch model as an object
@@ -40,7 +40,7 @@ class SaveMechanism():
 
         # Save the model and metadata
         torch.save(torchModel.state_dict(), filePath)
-        saves.append(SaveStructue(saveName, filePath, trainRatio, valRatio, dnnName, batchSize, epochNumber))
+        saves.append(SaveStructue(saveName, filePath, trainRatio, valRatio, cnnName, batchSize, epochNumber))
         with open("torchSaves.pickle", "wb") as f:
             pickle.dump(saves, f)
 
@@ -68,10 +68,10 @@ class SaveMechanism():
 
        # Create the base model
         if modelData is not None:
-            if modelData.dnnName == 'resnet':
-                modelType = Resnet()
-            elif modelData.dnnName == 'lenet5':
-                modelType = LetNet()
+            if modelData.cnnName == 'ResNet':
+                modelType = ResNet()
+            elif modelData.cnnName == 'LeNet5':
+                modelType = LetNet5()
             else:
                 print("ERR: NO model name found.")
                 raise Exception("No modelname found!")
@@ -98,12 +98,12 @@ class SaveStructue:
     """
     This class is a model of the data that is saved in the pickle
     """
-    def __init__(self, saveName, filePath, trainRatio, valRatio, dnnName, batchSize, epochNumber):
+    def __init__(self, saveName, filePath, trainRatio, valRatio, cnnName, batchSize, epochNumber):
         self.saveName = saveName
         self.filePath = filePath
         self.trainRatio = trainRatio
         self.valRatio = valRatio
-        self.dnnName = dnnName
+        self.cnnName = cnnName
         self.batchSize = batchSize
         self.epochNumber = epochNumber
 

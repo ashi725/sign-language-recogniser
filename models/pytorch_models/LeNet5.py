@@ -7,7 +7,7 @@ from torch.nn import ReLU
 from torch.nn import LogSoftmax
 from torch import flatten
 
-class LetNet(Module):
+class LetNet5(Module):
     """
     This class contains the a model for the LetNet
     This code is heavily influenced from
@@ -18,7 +18,7 @@ class LetNet(Module):
         classes = 25 # Total Classes
 
         # call the parent constructor
-        super(LetNet, self).__init__()
+        super(LetNet5, self).__init__()
         # initialize first set of CONV => RELU => POOL layers
         self.conv1 = Conv2d(in_channels=numChannels, out_channels=20,
                             kernel_size=(5, 5))

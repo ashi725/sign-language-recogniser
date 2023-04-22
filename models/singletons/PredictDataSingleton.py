@@ -18,7 +18,7 @@ class PredictDataSingleton:
     TrainedModel = None
     latestTrainedModelTrain = None
     latestTrainedModelValidate = None
-    latestTrainedModelDnnName = None
+    latestTrainedModelCnnName = None
     latestTrainedModelBatchSize = None
     latestTrainedModelEpoch = None
 
