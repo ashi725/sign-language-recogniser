@@ -36,12 +36,12 @@ class Net(Module):
     def forward(self, x):
         # pass the input through our first set of CONV => RELU =>
         # POOL layers
-        x = self.conv1(x)
+        x = self.conv1(x.to(self.conv1.weight.device))
         x = self.relu1(x)
         x = self.maxpool1(x)
         # pass the output from the previous layer through the second
         # set of CONV => RELU => POOL layers
-        x = self.conv2(x)
+        x = self.conv2(x.to(self.conv2.weight.device))
         x = self.relu2(x)
         x = self.maxpool2(x)
         # flatten the output from the previous layer and pass it

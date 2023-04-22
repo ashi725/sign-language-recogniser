@@ -2,11 +2,13 @@ import threading
 import time
 
 import cv2
+import numpy as np
+from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import *
-
-from models.DataModelSingleton import FingerDataset
+from PIL import Image
+from models.DataModelSingleton import FingerDataset, FingerImage
 from models.PredictDataSingleton import PredictDataSingleton
 from models.PredicterRunnerThread import PredicterRunnerThread
 from models.save_mechanism.ModelSaver import SaveMechanism
@@ -166,6 +168,13 @@ class TestTab(QWidget, TabBaseAbstractClass):
         self.cameraLabel = QLabel()
         hBox.addWidget(self.cameraLabel)
         self.cameraLabel.setText("Loading Camera")
+
+        # Information label
+        infoLabel = QLabel()
+        self.totaImgsAddedCounter = 0
+        infoLabel.setText("0 camera images added")
+        hBox.addWidget(infoLabel)
+
         cameraDialog.show()
 
         self.cameraThread = CameraThread(self.predictionData)
@@ -174,7 +183,15 @@ class TestTab(QWidget, TabBaseAbstractClass):
 
         snapButton = QPushButton("Capture")
         hBox.addWidget(snapButton)
-        snapButton.clicked.connect(lambda: self.cameraThread.saveImage())
+
+        def saveImageHandler():
+            self.cameraThread.saveImage()
+            self.totaImgsAddedCounter += 1
+            infoLabel.setText("{} camera images added".format(self.totaImgsAddedCounter))
+
+        cameraDialog.finished.connect(lambda: self.updateTotalImagesLabel())
+
+        snapButton.clicked.connect(lambda: saveImageHandler())
 
     def on_camera_dialog_close(self):
         self.cameraThread.stop()
@@ -196,12 +213,54 @@ class TestTab(QWidget, TabBaseAbstractClass):
         predictThread = PredicterRunnerThread(self.predictionData)
         predictThread.start()
 
+        predictDialogue = QDialog(self)
+        predictDialogue.setModal(True)
+
+        imageGridLayout = QGridLayout(predictDialogue)
+        statusLabel = QLabel("Predicting. Please Wait")
+        imageGridLayout.addWidget(statusLabel, 0, 0, 0, 10)
+
+        def updateShowPredictions(status):
+            print("yo")
+            statusLabel.setText("PREDICTIONS")
+
+            MAX_COLUMNS = 10
+            rowIndex = 1
+            columnIndex = 0
+            for prediction in self.predictionData.imagePredictionList:
+                numpyImg = prediction.imageNumpy
+                pilImg = Image.fromarray(numpyImg, mode='L')
+                pixmap = QPixmap.fromImage(ImageQt(pilImg))
+                predictedString = prediction.predictedClass
+
+                predictionWidget = None
+                if (prediction.actualClass is None):
+                    predictionWidget = PredictionRowView(pixmap, predictedString, prediction.predictedClassProbability)
+                else:
+                    predictionWidget = PredictionRowView(pixmap, predictedString, prediction.predictedClassProbability, prediction.actualClass)
+
+                imageGridLayout.addWidget(predictionWidget, rowIndex, columnIndex)
+                # Grid pos algorithm
+                columnIndex += 1
+                if (columnIndex > MAX_COLUMNS):
+                    columnIndex = 0
+                    rowIndex += 1
+
+        predictThread.predictionFinished.connect(updateShowPredictions)
+
+        statusLabel = QLabel()
+
+        predictDialogue.show()
+
+
+
+
 class CameraThread(QThread):
     newFrameFlag = pyqtSignal(QImage)
 
-    def __init__(self, dataSingleton):
+    def __init__(self, predictionDataSingleton):
         super().__init__()
-        self.databaseSingleton = dataSingleton
+        self.predictSingleton = predictionDataSingleton
         self.saveFlag = threading.Event()
         self.stopFlag = threading.Event()
 
@@ -219,7 +278,7 @@ class CameraThread(QThread):
 
             if (self.saveFlag.is_set()):
                 print("Image saved")
-                # todo Save image into correct format
+                self.saveFrameIntoSingleton(gray_frame)
                 self.saveFlag.clear()
         cap.release()
 
@@ -228,5 +287,40 @@ class CameraThread(QThread):
 
     def saveImage(self):
         self.saveFlag.set()
+
+    def saveFrameIntoSingleton(self, grayFrame):
+        # Create FingerImage class
+        resized_image = cv2.resize(grayFrame, (28, 28)) # Resize into 28x28px
+        pillowImg = Image.fromarray(np.uint8(resized_image), 'L')
+        pixmapImg = QPixmap.fromImage(ImageQt(pillowImg))
+
+        fingerImageObj = FingerImage(-1,resized_image, pixmapImg, pillowImg)
+        self.predictSingleton.predictionDataset.addFingerImage(fingerImageObj.label, fingerImageObj)
+        print("Finger image added")
+
+class PredictionRowView(QWidget ):
+    def __init__(self, imagePixmap, predictionStr, accVal, actualPred=None,  *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        vbox = QVBoxLayout(self)
+        self.setLayout(vbox)
+
+        imageLabel = QLabel()
+        predictionLabel = QLabel()
+        accuracyLabel = QLabel()
+        actual = QLabel()
+
+        imageLabel.setPixmap(imagePixmap)
+        predictionLabel.setText("Predicted: {}".format(predictionStr))
+        accuracyLabel.setText("Confidence: {:.0f}%".format(accVal*100))
+        vbox.addWidget(imageLabel)
+        vbox.addWidget(predictionLabel)
+        vbox.addWidget(accuracyLabel)
+
+        if (actualPred is not None):
+            actual.setText("Actual: {}".format(actualPred))
+            vbox.addWidget(actual)
+
+
+
 
 

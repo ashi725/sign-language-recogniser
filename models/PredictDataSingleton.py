@@ -19,14 +19,15 @@ class PredictDataSingleton:
     latestTrainedModelBatchSize = None
     latestTrainedModelEpoch = None
 
-
-
-
+    imagePredictionList = []
 
 class ImagePrediction:
-    pixmap = None
-    numpyArr = None
-    actualLabel = "?"
-    predictedLabel = None
+    def __init__(self, numpyImg, predictedClass, predictionProb, predProbDist, actualLabel):
+        self.imageNumpy = numpyImg
+        self.predictedClass = predictedClass
+        self.predictedClassProbability = predictionProb
+        self.predictionProbabilityDistribution = predProbDist
+        self.actualClass = actualLabel # This may not exist.
+
 
 singleton = PredictDataSingleton()
