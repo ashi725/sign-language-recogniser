@@ -170,7 +170,7 @@ class ModelTrainerThread(QThread):
 
                     self.progressBarChanged.emit(int(100. * counter / len(self.train_loader)))
                 counter += 1
-        print("[INFO] Finished Training. Start Evaluation.")
+        print("[INFO] Finished Training. Start Evaluation. Please Wait")
         self.statusUpdate.emit('Finished Training. Evaluating')
         self.progressBarChanged.emit(100)
         ##############

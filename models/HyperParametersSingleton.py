@@ -9,12 +9,12 @@ class HyperParametersSingleton:
     
     # Details and hyperparameters used for model.
     dataset = None
-    modelName = None
-    batchsize = None
-    epochs = None
-    train = None
-    validation = None
-    test = None
+    modelName = "lenet5"
+    batchsize = 100
+    epochs = 2
+    train = 50
+    validation = 50
+    test = 0
 
     # Latest model settings
     latestTrainedModel = None

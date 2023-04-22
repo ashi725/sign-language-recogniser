@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import *
 from PIL import Image
-from models.DataModelSingleton import FingerDataset, FingerImage
+from models.DataModelSingleton import FingerDataset, FingerImage, DataModelSingleton
 from models.PredictDataSingleton import PredictDataSingleton, convertLabelToClassName
 from models.PredicterRunnerThread import PredicterRunnerThread
 from models.save_mechanism.ModelSaver import SaveMechanism
@@ -18,23 +18,32 @@ from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
 class TestTab(QWidget, TabBaseAbstractClass):
     def refreshWindowOnLoad(self):
         self.updateTotalImagesLabel()
-    
+        # Check if should disable Dataset Image button.
+        if self.dataModel.trainDataset is None or self.dataModel.testDataset is None:
+            self.datasetImagesButton.setDisabled(True)
+        else:
+            self.datasetImagesButton.setDisabled(False)
+
     def __init__(self):
         super().__init__()
         self.predictionData = PredictDataSingleton()
+        self.dataModel = DataModelSingleton()
         vbox = QVBoxLayout()
         vbox.setAlignment(Qt.AlignTop | Qt.AlignCenter)
 
         vboxHyperparameters = QVBoxLayout()
 
-        cnnLabel = QLabel("CNN Name: ")
-        vboxHyperparameters.addWidget(cnnLabel)
+        self.modelPathLabel = QLabel("{}{}".format("Loaded Model:", "None"))
+        self.valTrainRatio = QLabel("{}{}".format("Train/Val Ratio:", "None"))
+        self.cnnLabel = QLabel("{}{}".format("Loaded CNN Name:", "None"))
+        self.batchsizeLabel = QLabel("{}{}".format("Batch Size:", "None"))
+        self.epochNumLabel = QLabel("{}{}".format("Epoch Number:", "None"))
 
-        batchsizeLabel = QLabel("Batch Size: ")
-        vboxHyperparameters.addWidget(batchsizeLabel)
-
-        epochNumLabel = QLabel("Epoch Number: ")
-        vboxHyperparameters.addWidget(epochNumLabel)
+        vboxHyperparameters.addWidget(self.modelPathLabel)
+        vboxHyperparameters.addWidget(self.cnnLabel)
+        vboxHyperparameters.addWidget(self.valTrainRatio)
+        vboxHyperparameters.addWidget(self.batchsizeLabel)
+        vboxHyperparameters.addWidget(self.epochNumLabel)
 
         loadModel = QPushButton("Load model from file")
         loadModel.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -55,14 +64,14 @@ class TestTab(QWidget, TabBaseAbstractClass):
         vbox.addLayout(hboxLabel)
 
         hboxButtons = QHBoxLayout()
-        datasetImagesButton = QPushButton("Dataset images")
-        datasetImagesButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        datasetImagesButton.clicked.connect(self.on_show_dataset_Button)
+        self.datasetImagesButton = QPushButton("Dataset images")
+        self.datasetImagesButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.datasetImagesButton.clicked.connect(self.on_show_dataset_Button)
 
         webcamButton = QPushButton("Webcam images")
         webcamButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         webcamButton.clicked.connect(self.on_camera_button)
-        hboxButtons.addWidget(datasetImagesButton)
+        hboxButtons.addWidget(self.datasetImagesButton)
         hboxButtons.addWidget(webcamButton)
 
         self.totalImagesToPredictLabel = QLabel("Images Chosen: 0")
@@ -97,10 +106,27 @@ class TestTab(QWidget, TabBaseAbstractClass):
 
         # Display radio selection
         for index in range(0, len(pyTorchSaves)):
+            rowWidget = QWidget()
+            rowHbox = QHBoxLayout(rowWidget)
+
+            # Show File
             radio = QRadioButton(pyTorchSaves[index].filePath) # Index is same as the pyTorchSaveRadios position
             pyTorchSaveRadios.append(radio)
+
+            # Show stat
+            statString = "Train/Val Ratio(%): {}|{}\tbatchSize: {}\tEpoch: {}\tDNN: {:<15s}".format(
+                pyTorchSaves[index].trainRatio,
+                pyTorchSaves[index].valRatio,
+                pyTorchSaves[index].batchSize,
+                pyTorchSaves[index].epochNumber,
+                pyTorchSaves[index].dnnName,
+            )
+            statLabel = QLabel(statString)
+
             buttonGroup.addButton(radio, id=index)
-            vbox.addWidget(radio)
+            rowHbox.addWidget(statLabel)
+            rowHbox.addWidget(radio)
+            vbox.addWidget(rowWidget)
 
         # Choose button
         def onChooseModelButton():
@@ -118,12 +144,18 @@ class TestTab(QWidget, TabBaseAbstractClass):
                 self.predictionData.latestTrainedModelBatchSize = pyTorchData.batchSize
                 self.predictionData.latestTrainedModelEpoch = pyTorchData.epochNumber
                 self.predictButton.setDisabled(False)
-                dialog.close()
+
+                # Update main tab stat
+                self.modelPathLabel.setText("{}{}".format("Loaded Model: ", saveLocation))
+                self.valTrainRatio.setText("{}{}|{}".format("Train/Val Ratio: ", pyTorchData.trainRatio,  pyTorchData.valRatio))
+                self.cnnLabel.setText("{}{}".format("Loaded CNN Name: ",pyTorchData.dnnName ))
+                self.batchsizeLabel.setText("{}{}".format("Batch Size: ", pyTorchData.batchSize))
+                self.epochNumLabel.setText("{}{}".format("Epoch Number: ", pyTorchData.epochNumber))
+
+            dialog.close()
         chooseModelButton = QPushButton("Select")
         chooseModelButton.clicked.connect(onChooseModelButton)
         vbox.addWidget(chooseModelButton)
-
-
 
 
 

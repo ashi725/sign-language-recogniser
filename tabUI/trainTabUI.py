@@ -47,7 +47,8 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         hboxModel = QHBoxLayout()
         modelLabel = QLabel("Model: ")
         self.modelDropdown = QComboBox()
-        self.modelDropdown.addItems(["Not selected","lenet5", "resnet", "xxxx"])
+        self.modelDropdown.addItems(["lenet5", "resnet"])
+        self.modelDropdown.setCurrentIndex(0)
         self.modelDropdown.currentTextChanged.connect(self.change_modelDropdown)
         hboxModel.addWidget(modelLabel)
         hboxModel.addWidget(self.modelDropdown)
@@ -56,7 +57,8 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         hboxBatchsize = QHBoxLayout()
         batchsizeLabel = QLabel("Batchsize: ")
         self.spinboxBatchsize = QSpinBox()
-        self.spinboxBatchsize.setRange(0, 500)
+        self.spinboxBatchsize.setRange(1, 500)
+        self.spinboxBatchsize.setValue(100)
         self.spinboxBatchsize.valueChanged.connect(self.change_spinboxBatchsize)
         hboxBatchsize.addWidget(batchsizeLabel)
         hboxBatchsize.addWidget(self.spinboxBatchsize)
@@ -65,7 +67,8 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         hboxEpochNum = QHBoxLayout()
         epochNumLabel = QLabel("Epoch Number: ")
         self.spinboxEpochNum = QSpinBox()
-        self.spinboxEpochNum.setRange(0, 10)
+        self.spinboxEpochNum.setRange(1, 10)
+        self.spinboxEpochNum.setValue(2)
         self.spinboxEpochNum.valueChanged.connect(self.change_spinboxEpochNum)
         hboxEpochNum.addWidget(epochNumLabel)
         hboxEpochNum.addWidget(self.spinboxEpochNum)
@@ -78,20 +81,23 @@ class TrainTab(QWidget, TabBaseAbstractClass):
 
         trainLabel = QLabel("Train")
         self.spinboxTrain = QSpinBox()
-        self.spinboxTrain.setRange(0, 100)
-        
+        self.spinboxTrain.setRange(10, 90)
+        self.spinboxTrain.setValue(50)
+
         sliderInfoLabel = QLabel("Both must be at least 10%")
         sliderInfoLabel.setAlignment(Qt.AlignCenter)
         sliderInfoLabel.setStyleSheet("font-size: 10px;")
         self.slider = QSlider(Qt.Horizontal, self)
-        self.slider.setRange(0, 100)
+        self.slider.setRange(10, 90)
+        self.slider.setValue(50)
         self.slider.setSingleStep(1)
         self.slider.setTickInterval(10)
         self.slider.setTickPosition(50)
         
         validateLabel = QLabel("Validate")
         self.spinboxValidate = QSpinBox()
-        self.spinboxValidate.setRange(0, 100)
+        self.spinboxValidate.setValue(50)
+        self.spinboxValidate.setRange(10, 90)
         
         # Link values to each other
         self.slider.valueChanged.connect(lambda value: self.spinboxTrain.setValue(value))
@@ -199,17 +205,13 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.saveAsButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.saveAsButton.clicked.connect(self.onSaveButton)
 
-        self.testModelButton = QPushButton("Test model")
-        self.testModelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.trainNewModelButton.clicked.connect(self.trainDialog.reject) # Close dialog and open test tab
 
         hboxButtons.addWidget(self.trainNewModelButton)
         hboxButtons.addWidget(self.saveAsButton)
-        hboxButtons.addWidget(self.testModelButton)
         self.trainNewModelButton.setVisible(False)
         self.saveAsButton.setVisible(False)
-        self.testModelButton.setVisible(False)
-        
+
         vbox.addLayout(hboxInfo)
         vbox.addWidget(self.progressBar)
         vbox.addLayout(hboxButtons)
@@ -237,11 +239,9 @@ class TrainTab(QWidget, TabBaseAbstractClass):
     def showFinishedButtons(self):
         print("finished training")
         self.saveAsButton.setDisabled(False)
-        self.testModelButton.setDisabled(False)
         self.cancelButton.setVisible(False)
         self.trainNewModelButton.setVisible(True)
         self.saveAsButton.setVisible(True)
-        self.testModelButton.setVisible(True)
 
         self.modelTrainerRunner.stop()
 

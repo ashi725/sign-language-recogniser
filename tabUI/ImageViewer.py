@@ -155,7 +155,6 @@ class ImageViewer(QWidget):
         self.imageGridLayout = QGridLayout(imageWidget)
         imageScrollArea.setWidgetResizable(True)
         imageScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        imageScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         imageScrollArea.setWidget(imageWidget)
         vboxRight.addWidget(imageScrollArea)
 

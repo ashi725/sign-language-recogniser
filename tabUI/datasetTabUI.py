@@ -18,7 +18,7 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
     def refreshWindowOnLoad(self):
         pass
 
-    def __init__(self):
+    def __init__(self, disableTrainTabFunc):
 
         # Init variables
         super().__init__()
@@ -26,7 +26,8 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
         self.dataModel = DataModelSingleton()
         self.hyperParameters = HyperParametersSingleton()
         self.downloadThreadInstance = None
-        
+        self.disableTrainTabFunc = disableTrainTabFunc
+
         # Import Button
         importDatasetButton = QPushButton('Import dataset')
         importDatasetButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -150,6 +151,7 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
 
         # If data = 0 then download successful. Redirect to different tab
         if data == 0:
+            self.disableTrainTabFunc(True)
             self.redirectNextTab()
 
     def redirectNextTab(self):

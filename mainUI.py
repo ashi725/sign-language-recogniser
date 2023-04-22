@@ -19,7 +19,7 @@ class MyApp(QWidget):
         self.tabWidget = QTabWidget()
         self.tabWidget.currentChanged.connect(self.onTabChanged)
 
-        datasetTab = DatasetTab()
+        datasetTab = DatasetTab(self.disableTrainTab)
         trainTab = TrainTab()
         testTab = TestTab()
         
@@ -27,6 +27,7 @@ class MyApp(QWidget):
         self.tabWidget.addTab(datasetTab, 'Dataset')
         self.tabWidget.addTab(trainTab, 'Train')
         self.tabWidget.addTab(testTab, 'Test')
+        self.disableTrainTab(False)
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.tabWidget)
@@ -42,6 +43,8 @@ class MyApp(QWidget):
         currentTab = self.tabWidget.currentWidget()
         currentTab.refreshWindowOnLoad()
 
+    def disableTrainTab(self, shouldDisable):
+        self.tabWidget.setTabEnabled(1, shouldDisable)
 
 
 if __name__ == '__main__':
