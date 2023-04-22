@@ -9,6 +9,7 @@ from torch.optim import Adam
 from torch.utils import data
 
 from models.pytorch_models.lenet import LetNet
+from models.pytorch_models.resnet import Resnet
 
 
 class PyModelTrainThread(QThread):
@@ -40,7 +41,6 @@ class PyModelTrainThread(QThread):
         self.test_loader = None
         self.device = None
         self.opt = None
-        self.criterion = None
         self.lossFn = None
 
     def run(self):
@@ -75,7 +75,8 @@ class PyModelTrainThread(QThread):
 
         # Loss function (cross-entropy) and optimizer with learning rate and momentum. CrossEntropyLoss
         if self.hyperParametersSingleton.modelName == 'resnet':
-            print("Unsupported yet")
+            self.lossFn = nn.CrossEntropyLoss()
+            self.opt = Adam(self.model.parameters(), lr=1e-3)
         elif self.hyperParametersSingleton.modelName == 'lenet5':
             self.lossFn = nn.NLLLoss()
             self.opt = Adam(self.model.parameters(), lr=1e-3)
@@ -167,7 +168,7 @@ class PyModelTrainThread(QThread):
                     self.progressBarChanged.emit(int(100. * counter / len(self.train_loader)))
                 counter += 1
         print("[INFO] Finished Training. Start Evaluation. Please Wait")
-        self.statusUpdate.emit('Finished Training. Evaluating')
+        self.statusUpdate.emit('Finished Training. Evaluating. Please Wait')
         self.progressBarChanged.emit(100)
 
         ##############
@@ -239,13 +240,7 @@ class PyModelTrainThread(QThread):
         @return: The model class
         """
         if self.hyperParametersSingleton.modelName == 'resnet':
-            print("unsupported")
-            raise Exception("Resnet loaded but not supported")
-            # resnet = models.resnet18(weights = None) # Load ResNet model architecture
-            # # Replace first convolutional layer and fully connected layer
-            # resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-            # resnet.fc = nn.Linear(512, 10)
-
+            return Resnet()
         elif self.hyperParametersSingleton.modelName == 'lenet5':
             return LetNet()
         else:

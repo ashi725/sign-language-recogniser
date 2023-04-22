@@ -4,7 +4,14 @@ import pickle
 import torch
 
 from models.pytorch_models.lenet import LetNet
+from models.pytorch_models.resnet import Resnet
+import torchvision.models as models
 
+import torch
+from torch.utils import data
+import torchvision.models as models
+import torch.nn as nn
+import torch.optim as optim
 
 class SaveMechanism():
     """
@@ -62,7 +69,7 @@ class SaveMechanism():
        # Create the base model
         if modelData is not None:
             if modelData.dnnName == 'resnet':
-                print("not suppored")
+                modelType = Resnet()
             elif modelData.dnnName == 'lenet5':
                 modelType = LetNet()
             else:

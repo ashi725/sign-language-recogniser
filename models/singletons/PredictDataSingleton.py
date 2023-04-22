@@ -22,7 +22,6 @@ class PredictDataSingleton:
     latestTrainedModelBatchSize = None
     latestTrainedModelEpoch = None
 
-    # This arr stores a list of ImagePrediction() objects. Aka results of predictions
     imagePredictionList = []
 
 class ImagePrediction:

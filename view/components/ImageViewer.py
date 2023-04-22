@@ -267,7 +267,7 @@ class ImageViewer(QWidget):
         # Display header stats
         self.databaseNameLabel.setText("Database Name: {}".format(dataset.databaseName))
         self.numTotalImagesLabel.setText("Total # Images: {}".format(
-            self.dataModel.testDataset.totalImages + self.dataModel.trainDataset.totalImages))
+        self.dataModel.testDataset.totalImages + self.dataModel.trainDataset.totalImages))
 
         totalImagesArrayNumber = dataset.totalImagesArray
 

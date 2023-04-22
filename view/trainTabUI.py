@@ -188,7 +188,6 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         epochNumLabel = QLabel("Epoch Number: " + str(self.hyperParameters.epochs))
         trainLabel = QLabel("Train Set Size: " + str(self.hyperParameters.train))
         validationLabel = QLabel("Validation Set Size: " + str(self.hyperParameters.validation))
-        testLabel = QLabel("Test Set Size: " + str(self.hyperParameters.test))
 
         # Dialogue
         vboxHyperparameters.addWidget(cnnLabel)
