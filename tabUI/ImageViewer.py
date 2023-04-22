@@ -1,7 +1,7 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
-from models.DataModelSingleton import DataModelSingleton
+from models.DataModelSingleton import DataModelSingleton, convertIndexArrToAlphabetIndex
 from models.HyperParametersSingleton import HyperParametersSingleton
 from tabUI.TabBaseAbstractClass import TabBaseAbstractClass
 
@@ -167,7 +167,7 @@ class ImageViewer(QWidget):
 
         self.setLayout(vbox)
 
-    def renderImages(self, datasetName, labelNumbersList):
+    def renderImages(self, datasetName, labelNumbersListArrForm):
         MAX_COLUMNS = 10
         rowIndex = 0
         columnIndex = 0
@@ -181,12 +181,12 @@ class ImageViewer(QWidget):
 
         totalImagesCount = 0
 
-        for labelNumber in labelNumbersList:
+        for labelArrFormNumber in labelNumbersListArrForm:
             # Check if label exist in dataset. If false skip
-            if str(labelNumber) not in dataset.labeledSet:
+            if str(convertIndexArrToAlphabetIndex(labelArrFormNumber)) not in dataset.labeledSet:
                 continue
 
-            fingerImageList = dataset.labeledSet[str(labelNumber)]
+            fingerImageList = dataset.labeledSet[str(convertIndexArrToAlphabetIndex(labelArrFormNumber))]
 
             for fingerImage in fingerImageList:
                 imageLabel = SelectableLabel(fingerImage)
@@ -201,7 +201,7 @@ class ImageViewer(QWidget):
                     rowIndex += 1
 
         # Update Stats
-        self.numLettersLabel.setText("# Letters Displayed: {}".format(len(labelNumbersList)))
+        self.numLettersLabel.setText("# Letters Displayed: {}".format(len(labelNumbersListArrForm)))
         self.numSelectedImagesLabel.setText("# Images Displayed: {}".format(totalImagesCount))
 
     def clearImages(self):
@@ -214,8 +214,8 @@ class ImageViewer(QWidget):
     # This method generates a list of numbers according to labels of the checkbox
 
     def generateLabelNumberList(self):
-        labelsToDisplay = []
-        counter = 1
+        labelsToDisplay = [] # In alphabet index form
+        counter = 0
         for chkBox in self.letterCol1CheckBoxes:
             if chkBox.isChecked():
                 labelsToDisplay.append(counter)
@@ -240,14 +240,14 @@ class ImageViewer(QWidget):
         totalImagesArrayNumber = dataset.totalImagesArray
 
         # Col1 stats
-        tempCounter = 0
+        tempArrIndexCounter = 0
         for statLabel in self.letterCol1Stats:
-            statLabel.setText(str(totalImagesArrayNumber[tempCounter]))
-            tempCounter += 1
+            statLabel.setText(str(totalImagesArrayNumber[tempArrIndexCounter]))
+            tempArrIndexCounter += 1
         # Col2 Stats
         for statLabel in self.letterCol2Stats:
-            statLabel.setText(str(totalImagesArrayNumber[tempCounter]))
-            tempCounter += 1
+            statLabel.setText(str(totalImagesArrayNumber[tempArrIndexCounter]))
+            tempArrIndexCounter += 1
 
     def onSelectAllCheckboxes(self):
         for chkBox in self.letterCol1CheckBoxes:

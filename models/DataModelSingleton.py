@@ -23,7 +23,7 @@ class FingerDataset(Dataset):
     def __init__(self, transform = None):
         self.csvData = None
         self.databaseName = None
-        self.labeledSet = {} # Dict. Key=Label name. Value=List of FingerImage classes
+        self.labeledSet = {} # Dict. Key=Label name. In ALPHABET INDEX. Value=List of FingerImage classes
         self.totalImagesArray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0]
         self.totalImages = 0
 
@@ -41,6 +41,8 @@ class FingerDataset(Dataset):
 
 
     def addFingerImage(self, key: str, fingerImageClass):
+        # Key is index in FULL ALPHABET
+
         if (key not in self.labeledSet):
             # New label if it doesnt exist.
             self.labeledSet[key] = []
@@ -55,14 +57,13 @@ class FingerDataset(Dataset):
         self.totalImages += 1
         self._addImagesCounterInLabel(int(key))
 
-    def getImagesByLabel(self, label):
-        raise NotImplementedError()
 
     # Total images helper methods.
     def getTotalImagesInLabel(self, label: int):
         return self.totalImagesArray[label-1]
 
     def _addImagesCounterInLabel(self, label: int):
+        label = convertSignIndexToArr(label)
         self.totalImagesArray[label-1] += 1
 
     # Pytorch Dataset Methods
@@ -85,9 +86,21 @@ class FingerImage:
         self.numpyImgArr = numpyArr
         self.pillowImage = pilImg
         self.pixMap = pixmap # This is the PixMap, Image used to display for PYQT
-        self.label = label
+        self.label = label # Label is 0-9 10-24. (Correspoinding to alphabet)
 
         self.cameraImage = None # For high quality camera image. The vars above will be scaled down to 28x28px
+
+def convertSignIndexToArr(index: int):
+    if index <= 8:
+        return index
+    else:
+        return index - 1
+
+def convertIndexArrToAlphabetIndex(index: int):
+    if index <= 8:
+        return index
+    else:
+        return index + 1
 
 # Create init singleton.
 singleton = DataModelSingleton()

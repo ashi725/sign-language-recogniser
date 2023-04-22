@@ -9,7 +9,7 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import *
 from PIL import Image
 from models.DataModelSingleton import FingerDataset, FingerImage
-from models.PredictDataSingleton import PredictDataSingleton
+from models.PredictDataSingleton import PredictDataSingleton, convertLabelToClassName
 from models.PredicterRunnerThread import PredicterRunnerThread
 from models.save_mechanism.ModelSaver import SaveMechanism
 from tabUI.ImageViewer import ImageViewer
@@ -217,12 +217,11 @@ class TestTab(QWidget, TabBaseAbstractClass):
         predictDialogue.setModal(True)
 
         imageGridLayout = QGridLayout(predictDialogue)
-        statusLabel = QLabel("Predicting. Please Wait")
-        imageGridLayout.addWidget(statusLabel, 0, 0, 0, 10)
+        self.statusLabel = QLabel("Predicting. Please Wait")
+        imageGridLayout.addWidget(self.statusLabel, 0, 0, 0, 10)
 
         def updateShowPredictions(status):
-            print("yo")
-            statusLabel.setText("PREDICTIONS")
+            self.statusLabel.setText("PREDICTIONS")
 
             MAX_COLUMNS = 10
             rowIndex = 1
@@ -309,6 +308,9 @@ class PredictionRowView(QWidget ):
         accuracyLabel = QLabel()
         actual = QLabel()
 
+        # Convert classes into their correct label and not a num
+        predictionStr = convertLabelToClassName(int(predictionStr))
+
         imageLabel.setPixmap(imagePixmap)
         predictionLabel.setText("Predicted: {}".format(predictionStr))
         accuracyLabel.setText("Confidence: {:.0f}%".format(accVal*100))
@@ -317,6 +319,7 @@ class PredictionRowView(QWidget ):
         vbox.addWidget(accuracyLabel)
 
         if (actualPred is not None):
+            actualPred = convertLabelToClassName(int(actualPred.item()))
             actual.setText("Actual: {}".format(actualPred))
             vbox.addWidget(actual)
 

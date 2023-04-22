@@ -30,4 +30,11 @@ class ImagePrediction:
         self.actualClass = actualLabel # This may not exist.
 
 
+def convertLabelToClassName(alphaFormIndex: int):
+    alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    if alphaFormIndex == -1:
+        return "Camera"
+    return alphabet[alphaFormIndex]
+
+
 singleton = PredictDataSingleton()
