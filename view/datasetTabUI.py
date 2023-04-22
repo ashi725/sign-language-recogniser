@@ -64,14 +64,14 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
         """
 
         # Dialogue settings
-        dialog = QDialog(self)   
-        dialog.setModal(True)
-        dialog.setWindowTitle('Import dataset')
-        dialog.setWindowFlags(dialog.windowFlags() & ~Qt.WindowCloseButtonHint)
-        dialog.setFixedSize(600, 200)
+        self.dialog = QDialog(self)   
+        self.dialog.setModal(True)
+        self.dialog.setWindowTitle('Import dataset')
+        self.dialog.setWindowFlags(self.dialog.windowFlags() & ~Qt.WindowCloseButtonHint)
+        self.dialog.setFixedSize(600, 200)
 
         # Dropdown for datatype
-        self.dropdown = QComboBox(dialog)
+        self.dropdown = QComboBox(self.dialog)
         self.dropdown.setFixedWidth(200)
         self.dropdown.addItems(['Not selected', 'MNIST', 'Custom'])
         self.dropdown.currentIndexChanged.connect(self.dropdown_changed)
@@ -90,7 +90,7 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
         # Cancel Button
         self.cancelButton = QPushButton("Cancel")
         self.cancelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.cancelButton.clicked.connect(dialog.reject)
+        self.cancelButton.clicked.connect(self.dialog.reject)
 
         # Progress Widgets
         self.progressBar = QProgressBar()
@@ -118,13 +118,13 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
         hbox2.addStretch()
         hbox2.addWidget(self.cancelButton)
         vbox.addLayout(hbox2)
-        dialog.setLayout(vbox)
+        self.dialog.setLayout(vbox)
 
         # Event Binders
         self.downloadButton.clicked.connect(lambda: self.onDownloadDatabaseButton(self.dropdown.currentText()))
         self.stopButton.clicked.connect(self.onStopDownloadButton)
 
-        dialog.show()    
+        self.dialog.show()    
 
     def dropdown_changed(self):
         self.hyperParameters.dataset = self.dropdown.currentText()
@@ -181,9 +181,11 @@ class DatasetTab(QWidget,TabBaseAbstractClass):
         self.downloadButton.setDisabled(False)
         self.stopButton.setDisabled(True)
         self.cancelButton.setDisabled(False)
+        self.cancelButton.setText("Done")
 
         # If data = 0 then download successful. Redirect to different tab
         if data == 0:
             self.disableTrainTabFunc(True)
+            print("download successful")
 
 

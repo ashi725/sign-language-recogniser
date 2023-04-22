@@ -218,19 +218,18 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.cancelButton.clicked.connect(self.onCancelButton) # just here for now to test the buttons
 
         # 3 different buttons after training finishes - train new model, save as, test model
-        self.trainNewModelButton = QPushButton("Train new model")
-        self.trainNewModelButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.trainNewModelButton.clicked.connect(self.trainDialog.reject)
-
         self.saveAsButton = QPushButton("Save as")
         self.saveAsButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.saveAsButton.clicked.connect(self.onSaveButton)
+        
+        self.doneButton = QPushButton("Done")
+        self.doneButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.doneButton.clicked.connect(self.trainDialog.reject)
 
-        self.trainNewModelButton.clicked.connect(self.trainDialog.reject) # Close dialog and open test tab
-
-        hboxButtons.addWidget(self.trainNewModelButton)
         hboxButtons.addWidget(self.saveAsButton)
-        self.trainNewModelButton.setVisible(False)
+        hboxButtons.addWidget(self.doneButton)
+        
+        self.doneButton.setVisible(False)
         self.saveAsButton.setVisible(False)
 
         vbox.addLayout(hboxInfo)
@@ -261,7 +260,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         print("finished training")
         self.saveAsButton.setDisabled(False)
         self.cancelButton.setVisible(False)
-        self.trainNewModelButton.setVisible(True)
+        self.doneButton.setVisible(True)
         self.saveAsButton.setVisible(True)
         self.modelTrainerRunner.stop()
     
@@ -277,7 +276,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         saver = SaveMechanism()
 
         hyperParamsSingleton = HyperParametersSingleton()
-
+        
         # Check if a file name was selected
         if file_name:
             # save model into disc
@@ -291,7 +290,9 @@ class TrainTab(QWidget, TabBaseAbstractClass):
                 hyperParamsSingleton.latestTrainedModelEpoch,
                 hyperParamsSingleton.latestTrainedModel
             )
+            
             print("Saved")
+            
 
     def on_train_model_button(self):
         self.show_train_dialog()
@@ -304,13 +305,12 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.progressBar.setValue(value)
 
     def onTrainingFInish(self, status):
-        print("TrainUI finin")
+        print("TrainUI finished")
         self.showFinishedButtons()
 
     def onCancelButton(self):
         self.showFinishedButtons()
         self.saveAsButton.setDisabled(True)
-        self.testModelButton.setDisabled(True)
 
 
 

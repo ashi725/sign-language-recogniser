@@ -116,7 +116,6 @@ class TestTab(QWidget, TabBaseAbstractClass):
         dialog.setWindowTitle('Choose ML Model')
         dialog.setModal(True)
         dialog.setMinimumSize(900, 250)
-        dialog.setMaximumSize(900, 600)
         dialog.show()
 
         # Layout
@@ -137,6 +136,8 @@ class TestTab(QWidget, TabBaseAbstractClass):
         for index in range(0, len(pyTorchSaves)):
             rowWidget = QWidget()
             rowHbox = QHBoxLayout(rowWidget)
+            rowHbox.setContentsMargins(0, 0, 0, 0)  # Set all margins to zero
+            rowHbox.setSpacing(0)  # Set spacing between widgets to zero
 
             # Show File
             radio = QRadioButton(pyTorchSaves[index].filePath) # Index is same as the pyTorchSaveRadios position
@@ -188,6 +189,10 @@ class TestTab(QWidget, TabBaseAbstractClass):
         # Layout settings
         chooseModelButton = QPushButton("Select")
         chooseModelButton.setFixedWidth(100)
+
+        # Remove padding
+        chooseModelButton.setStyleSheet("padding: 0;")
+
         chooseModelButton.clicked.connect(onChooseModelButton)
         vbox.addWidget(chooseModelButton)
 
