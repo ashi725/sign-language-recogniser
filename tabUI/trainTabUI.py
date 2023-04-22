@@ -40,7 +40,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
 
     def show_dialog(self):
         self.dialog = QDialog(self)   
-        self.dialog.setWindowTitle(self.hyperParameters.dataset + "[numimages" + "1" + "]")
+        self.dialog.setWindowTitle("Training Model")
         self.dialog.resize(400, 300)   
 
         # Model dropdown
@@ -137,6 +137,12 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         vboxAll = QVBoxLayout()
         vboxAll.addLayout(vbox)
         vboxAll.addLayout(vboxButton)
+
+        # Refresh the singleton values
+        self.change_modelDropdown()
+        self.change_spinboxBatchsize()
+        self.change_spinboxEpochNum()
+        self.change_slider()
 
         self.dialog.setLayout(vboxAll)
         self.dialog.show()
@@ -242,7 +248,6 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         self.cancelButton.setVisible(False)
         self.trainNewModelButton.setVisible(True)
         self.saveAsButton.setVisible(True)
-
         self.modelTrainerRunner.stop()
 
     # Dialog to save model

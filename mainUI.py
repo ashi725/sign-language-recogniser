@@ -1,4 +1,6 @@
 import sys
+
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 from tabUI.datasetTabUI import DatasetTab
 from tabUI.trainTabUI import TrainTab
@@ -34,7 +36,8 @@ class MyApp(QWidget):
         vbox.setContentsMargins(0, 0, 0, 0)
         self.setLayout(vbox)
 
-        self.setWindowTitle('Test Application')
+        self.setWindowTitle('Sign language recognition')
+        self.setWindowIcon(QIcon("resources/thumbsup.png"))
         self.move(800, -800)
         self.resize(800, 600)        
         self.show()

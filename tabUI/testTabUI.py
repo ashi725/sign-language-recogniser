@@ -8,6 +8,8 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import *
 from PIL import Image
+from PyQt5 import QtCore
+
 from models.DataModelSingleton import FingerDataset, FingerImage, DataModelSingleton
 from models.PredictDataSingleton import PredictDataSingleton, convertLabelToClassName
 from models.PredicterRunnerThread import PredicterRunnerThread
@@ -89,6 +91,7 @@ class TestTab(QWidget, TabBaseAbstractClass):
 
     def on_load_model_button(self):
         dialog = QDialog(self)
+        dialog.setWindowTitle('Choose ML Model')
         dialog.setModal(True)
         dialog.show()
 
@@ -164,7 +167,8 @@ class TestTab(QWidget, TabBaseAbstractClass):
     #####
     def on_show_dataset_Button(self):
         imageView = QDialog(self)
-        imageView.resize(500, 500)
+        imageView.setWindowTitle("Choose images to predict")
+        imageView.resize(800, 800)
         imageView.setModal(True)
 
         vbox = QVBoxLayout()
@@ -193,19 +197,24 @@ class TestTab(QWidget, TabBaseAbstractClass):
 
     def on_camera_button(self):
         cameraDialog = QDialog(self)
+        cameraDialog.setWindowTitle("Predict webcam pictures")
         cameraDialog.resize(500, 500)
         cameraDialog.setModal(True)
         cameraDialog.rejected.connect(self.on_camera_dialog_close)
-        hBox = QHBoxLayout(cameraDialog)
+
+        gridLayout = QGridLayout(cameraDialog)
+        gridLayout.setAlignment(QtCore.Qt.AlignCenter)
+
         self.cameraLabel = QLabel()
-        hBox.addWidget(self.cameraLabel)
+        self.cameraLabel.resize(200, 200)
+        gridLayout.addWidget(self.cameraLabel, 0, 0, 1, 2)
         self.cameraLabel.setText("Loading Camera")
 
         # Information label
         infoLabel = QLabel()
         self.totaImgsAddedCounter = 0
         infoLabel.setText("0 camera images added")
-        hBox.addWidget(infoLabel)
+        gridLayout.addWidget(infoLabel, 1, 1)
 
         cameraDialog.show()
 
@@ -213,8 +222,9 @@ class TestTab(QWidget, TabBaseAbstractClass):
         self.cameraThread.newFrameFlag.connect(self.render_latest_frame)
         self.cameraThread.start()
 
-        snapButton = QPushButton("Capture")
-        hBox.addWidget(snapButton)
+        self.snapButton = QPushButton("Capture")
+        self.snapButton.setDisabled(True)
+        gridLayout.addWidget(self.snapButton, 1,0)
 
         def saveImageHandler():
             self.cameraThread.saveImage()
@@ -223,7 +233,7 @@ class TestTab(QWidget, TabBaseAbstractClass):
 
         cameraDialog.finished.connect(lambda: self.updateTotalImagesLabel())
 
-        snapButton.clicked.connect(lambda: saveImageHandler())
+        self.snapButton.clicked.connect(lambda: saveImageHandler())
 
     def on_camera_dialog_close(self):
         self.cameraThread.stop()
@@ -231,6 +241,7 @@ class TestTab(QWidget, TabBaseAbstractClass):
     def render_latest_frame(self, image):
         pixelMap = QPixmap.fromImage(image)
         self.cameraLabel.setPixmap(pixelMap)
+        self.snapButton.setDisabled(False)
         self.cameraLabel.resize(pixelMap.width(), pixelMap.height())
 
     def updateTotalImagesLabel(self):
@@ -246,11 +257,15 @@ class TestTab(QWidget, TabBaseAbstractClass):
         predictThread.start()
 
         predictDialogue = QDialog(self)
+        predictDialogue.setWindowTitle("Predictions")
         predictDialogue.setModal(True)
 
         imageGridLayout = QGridLayout(predictDialogue)
+        imageGridLayout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
+
         self.statusLabel = QLabel("Predicting. Please Wait")
-        imageGridLayout.addWidget(self.statusLabel, 0, 0, 0, 10)
+        imageGridLayout.addWidget(self.statusLabel, 0, 0, 1, 10, alignment=Qt.AlignHCenter)
+        self.statusLabel.setStyleSheet('padding: 5px; font-size: 16px; font-weight: bold;')
 
         def updateShowPredictions(status):
             self.statusLabel.setText("PREDICTIONS")
@@ -349,6 +364,7 @@ class PredictionRowView(QWidget ):
         vbox.addWidget(imageLabel)
         vbox.addWidget(predictionLabel)
         vbox.addWidget(accuracyLabel)
+        vbox.setContentsMargins(0, 0, 0, 0)
 
         if (actualPred is not None):
             actualPred = convertLabelToClassName(int(actualPred.item()))
