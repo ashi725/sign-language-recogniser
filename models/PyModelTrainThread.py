@@ -8,8 +8,8 @@ from torch import cuda, nn
 from torch.optim import Adam
 from torch.utils import data
 
-from models.pytorch_models.LeNet5 import LetNet5
-from models.pytorch_models.ResNet import ResNet
+from models.pytorch_models.lenet import LetNet
+from models.pytorch_models.resnet import Resnet
 
 
 class PyModelTrainThread(QThread):
@@ -74,10 +74,10 @@ class PyModelTrainThread(QThread):
         self.model = self.model.to(self.device) # Move to GPU if supported
 
         # Loss function (cross-entropy) and optimizer with learning rate and momentum. CrossEntropyLoss
-        if self.hyperParametersSingleton.modelName == 'ResNet':
+        if self.hyperParametersSingleton.modelName == 'resnet':
             self.lossFn = nn.CrossEntropyLoss()
             self.opt = Adam(self.model.parameters(), lr=1e-3)
-        elif self.hyperParametersSingleton.modelName == 'LeNet5':
+        elif self.hyperParametersSingleton.modelName == 'lenet':
             self.lossFn = nn.NLLLoss()
             self.opt = Adam(self.model.parameters(), lr=1e-3)
 
@@ -236,13 +236,13 @@ class PyModelTrainThread(QThread):
 
     def _determine_pytorch_model(self):
         """
-        This method determines what pytorch model to use [LetNet5, ResNet]
+        This method determines what pytorch model to use [lenet, resnet]
         @return: The model class
         """
-        if self.hyperParametersSingleton.modelName == 'ResNet':
-            return ResNet()
-        elif self.hyperParametersSingleton.modelName == 'LeNet5':
-            return LetNet5()
+        if self.hyperParametersSingleton.modelName == 'resnet':
+            return Resnet()
+        elif self.hyperParametersSingleton.modelName == 'lenet':
+            return LetNet()
         else:
             print("ERR: NO model name found.")
             raise Exception("No modelname found!")

@@ -3,8 +3,8 @@ import pickle
 
 import torch
 
-from models.pytorch_models.LeNet5 import LetNet5
-from models.pytorch_models.ResNet import ResNet
+from models.pytorch_models.lenet import LetNet
+from models.pytorch_models.resnet import Resnet
 import torchvision.models as models
 
 import torch
@@ -68,10 +68,10 @@ class SaveMechanism():
 
        # Create the base model
         if modelData is not None:
-            if modelData.cnnName == 'ResNet':
-                modelType = ResNet()
-            elif modelData.cnnName == 'LeNet5':
-                modelType = LetNet5()
+            if modelData.cnnName == 'resnet':
+                modelType = Resnet()
+            elif modelData.cnnName == 'lenet':
+                modelType = LetNet()
             else:
                 print("ERR: NO model name found.")
                 raise Exception("No modelname found!")

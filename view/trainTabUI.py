@@ -53,7 +53,7 @@ class TrainTab(QWidget, TabBaseAbstractClass):
         hboxModel = QHBoxLayout()
         modelLabel = QLabel("Model: ")
         self.modelDropdown = QComboBox()
-        self.modelDropdown.addItems(["LeNet5", "ResNet"])
+        self.modelDropdown.addItems(["lenet", "resnet"])
         self.modelDropdown.setCurrentIndex(0)
         self.modelDropdown.currentTextChanged.connect(self.change_modelDropdown)
         hboxModel.addWidget(modelLabel)
